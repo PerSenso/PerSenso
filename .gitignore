@@ -1,0 +1,7 @@
+docs/
+.env
+.env.*
+node_modules/
+.next/
+dist/
+.turbo/
