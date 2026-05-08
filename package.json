@@ -1,0 +1,20 @@
+{
+  "name": "persenso",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "prepare": "husky"
+  },
+  "packageManager": "npm@11.11.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "husky": "latest",
+    "turbo": "latest"
+  }
+}
