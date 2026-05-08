@@ -1,0 +1,5 @@
+#!/bin/sh
+npx turbo run test lint --filter=...[HEAD] || {
+  echo "Tests o lint fallaron. Commit bloqueado."
+  exit 1
+}
