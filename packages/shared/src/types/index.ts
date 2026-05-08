@@ -1,6 +1,51 @@
 export type Role = 'OWNER' | 'ADMIN' | 'VIEWER';
 export type Gender = 'HOMBRE' | 'MUJER' | 'UNISEX';
 
+export interface Client {
+  id: string;
+  name: string;
+  ci?: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Sale {
+  id: string;
+  clientId: string;
+  productId: string;
+  restockSourceId?: string;
+  total: number;
+  unitCostAtSale?: number;
+  profitAtSale?: number;
+  marginPctAtSale?: number;
+  date: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaleAdmin extends Sale {
+  unitCostAtSale: number;
+  profitAtSale: number;
+  marginPctAtSale?: number;
+}
+
+export interface Payment {
+  id: string;
+  saleId: string;
+  clientId: string;
+  amount: number;
+  paymentMethod: string;
+  isInitial: boolean;
+  receiptUrl?: string;
+  date: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   username: string;

@@ -32,26 +32,131 @@ model RefreshToken {
 }
 
 model Product {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String
   brand         String?
   size          String?
   sizeMl        Int?
   concentration String?
-  gender        Gender   @default(UNISEX)
+  gender        Gender    @default(UNISEX)
   description   String?
   imageUrl      String?
-  costPrice     Decimal  @db.Decimal(10, 2)
-  salePrice     Decimal  @db.Decimal(10, 2)
-  minStock      Int      @default(2)
+  costPrice     Decimal   @db.Decimal(10, 2)
+  salePrice     Decimal   @db.Decimal(10, 2)
+  minStock      Int       @default(2)
   notes         String?
-  isPublished   Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isPublished   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  restocks      Restock[]
+  sales         Sale[]
 }
 
 enum Gender {
   HOMBRE
   MUJER
   UNISEX
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Order {
+  id             String         @id @default(uuid())
+  date           DateTime
+  supplierId     String?
+  supplier       Supplier?      @relation(fields: [supplierId], references: [id])
+  shippingCost   Decimal        @default(0) @db.Decimal(10, 2)
+  marketingCost  Decimal        @default(0) @db.Decimal(10, 2)
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  restocks       Restock[]
+  fundingEntries FundingEntry[]
+}
+
+model Restock {
+  id           String   @id @default(uuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+  quantity     Int
+  baseUnitCost Decimal  @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+  sales        Sale[]   @relation("RestockSource")
+}
+
+model FundingEntry {
+  id       String  @id @default(uuid())
+  orderId  String
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  investor String
+  method   String
+  amount   Decimal @db.Decimal(10, 2)
+}
+
+model Client {
+  id        String    @id @default(uuid())
+  name      String
+  ci        String?
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sales     Sale[]
+  payments  Payment[]
+}
+
+model Sale {
+  id              String    @id @default(uuid())
+  clientId        String
+  client          Client    @relation(fields: [clientId], references: [id])
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id])
+  restockSourceId String?
+  restockSource   Restock?  @relation("RestockSource", fields: [restockSourceId], references: [id])
+  total           Decimal   @db.Decimal(10, 2)
+  unitCostAtSale  Decimal?  @db.Decimal(10, 2)
+  profitAtSale    Decimal?  @db.Decimal(10, 2)
+  marginPctAtSale Decimal?  @db.Decimal(5, 2)
+  date            DateTime
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  payments        Payment[]
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  saleId        String
+  sale          Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id])
+  amount        Decimal  @db.Decimal(10, 2)
+  paymentMethod String
+  isInitial     Boolean  @default(false)
+  receiptUrl    String?
+  date          DateTime
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model CashMovement {
+  id        String   @id @default(uuid())
+  type      String
+  source    String
+  method    String
+  amount    Decimal  @db.Decimal(10, 2)
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
 }

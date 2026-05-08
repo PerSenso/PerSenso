@@ -6,3 +6,6 @@ node_modules/
 .next/
 dist/
 .turbo/
+apps/api/scripts/firebase-export.json
+apps/api/scripts/migration-errors.json
+apps/api/scripts/migration-images-errors.json

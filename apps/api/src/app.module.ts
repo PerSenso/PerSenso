@@ -7,6 +7,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { StorageModule } from './storage/storage.module';
+import { ClientsModule } from './clients/clients.module';
+import { SalesModule } from './sales/sales.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { StorageModule } from './storage/storage.module';
     AuthModule,
     ProductsModule,
     StorageModule,
+    ClientsModule,
+    SalesModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

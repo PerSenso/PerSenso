@@ -3,3 +3,5 @@ node_modules
 /generated/prisma
 /coverage
 dist
+/scripts/firebase-export.json
+/scripts/migration-errors.json
