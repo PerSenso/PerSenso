@@ -1,37 +1,99 @@
 'use client';
 
+import { useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { ProductAdmin } from '@persenso/shared';
-import { Plus } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
+import { NewProductoDialog } from './NewProductoDialog';
 
 interface InventarioContentProps {
   products: ProductAdmin[];
 }
 
+type GenderFilter = 'all' | 'HOMBRE' | 'MUJER' | 'UNISEX';
+
+const GENDER_CHIPS: { value: GenderFilter; label: string }[] = [
+  { value: 'all',    label: 'Todos' },
+  { value: 'HOMBRE', label: '♂ Hombre' },
+  { value: 'MUJER',  label: '♀ Mujer' },
+  { value: 'UNISEX', label: '⚥ Unisex' },
+];
+
 export function InventarioContent({ products }: InventarioContentProps) {
+  const [showNew, setShowNew] = useState(false);
+  const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
+  const [stockCritico, setStockCritico] = useState(false);
+
+  const filterFn = (p: ProductAdmin): boolean => {
+    if (genderFilter !== 'all' && p.gender !== genderFilter) return false;
+    if (stockCritico && (p.stock ?? 0) > (p.minStock ?? 2)) return false;
+    return true;
+  };
+
+  const hasFilter = genderFilter !== 'all' || stockCritico;
+  const lowStockCount = products.filter((p) => (p.stock ?? 0) <= (p.minStock ?? 2)).length;
+
   return (
     <>
       <AdminPageHeader
         title="Inventario"
         subtitle={`${products.length} productos registrados`}
         actions={
-          <button className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
+          <button onClick={() => setShowNew(true)}
+            className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
             <Plus className="w-4 h-4" />
             Nuevo Producto
           </button>
         }
       />
+      {showNew && <NewProductoDialog onClose={() => setShowNew(false)} />}
+
+      {/* Chips de filtro */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        {/* Género */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--ps-text-muted)' }}>
+            Género:
+          </span>
+          {GENDER_CHIPS.map(({ value, label }) => (
+            <button key={value} onClick={() => setGenderFilter(value)}
+              className="px-3 py-1 rounded-full text-xs font-medium transition-all"
+              style={genderFilter === value
+                ? { background: 'rgba(201,168,76,0.18)', color: 'var(--ps-gold)' }
+                : { background: 'var(--ps-surface)', color: 'var(--ps-text-muted)', border: '1px solid var(--ps-border)' }
+              }>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Separador */}
+        <div className="w-px h-4" style={{ background: 'var(--ps-border)' }} />
+
+        {/* Stock crítico */}
+        <button onClick={() => setStockCritico((v) => !v)}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all"
+          style={stockCritico
+            ? { background: 'rgba(224,92,92,0.18)', color: 'var(--ps-red)' }
+            : { background: 'var(--ps-surface)', color: 'var(--ps-text-muted)', border: '1px solid var(--ps-border)' }
+          }>
+          <AlertTriangle className="w-3 h-3" />
+          Stock crítico ({lowStockCount})
+        </button>
+      </div>
 
       <AdminDataTable
         data={products}
         keyExtractor={(p) => p.id}
         emptyMessage="No hay productos registrados"
+        searchable
+        searchPlaceholder="Buscar por nombre o marca…"
+        searchKeys={['name', 'brand']}
+        filterFn={hasFilter ? filterFn : undefined}
         columns={[
           {
-            key: 'name',
-            header: 'Producto',
-            sortable: true,
+            key: 'name', header: 'Producto', sortable: true,
             render: (p) => (
               <div>
                 <p className="font-medium" style={{ color: 'var(--ps-text)' }}>{p.name}</p>
@@ -42,71 +104,54 @@ export function InventarioContent({ products }: InventarioContentProps) {
             ),
           },
           {
-            key: 'size',
-            header: 'Tamaño',
+            key: 'size', header: 'Tamaño',
             render: (p) => p.size || (p.sizeMl ? `${p.sizeMl}ml` : '—'),
           },
           {
-            key: 'gender',
-            header: 'Género',
+            key: 'gender', header: 'Género',
             render: (p) => {
               const icons: Record<string, string> = { HOMBRE: '♂', MUJER: '♀', UNISEX: '⚥' };
               return `${icons[p.gender] || ''} ${p.gender}`;
             },
           },
           {
-            key: 'stock',
-            header: 'Stock',
-            sortable: true,
-            align: 'center',
+            key: 'stock', header: 'Stock', sortable: true, align: 'center',
             render: (p) => {
               const stock = p.stock ?? 0;
               const minStock = p.minStock ?? 2;
               const isLow = stock <= minStock;
               return (
-                <span
-                  className="font-medium"
-                  style={{ color: stock === 0 ? 'var(--ps-red)' : isLow ? 'var(--ps-gold)' : 'var(--ps-text)' }}
-                >
+                <span className="font-medium tabular-nums"
+                  style={{ color: stock === 0 ? 'var(--ps-red)' : isLow ? 'var(--ps-gold)' : 'var(--ps-text)' }}>
                   {stock}
                 </span>
               );
             },
           },
           {
-            key: 'costPrice',
-            header: 'Costo',
-            sortable: true,
-            align: 'right',
+            key: 'costPrice', header: 'Costo', sortable: true, align: 'right',
             render: (p) => (
-              <span style={{ color: 'var(--ps-text-muted)' }}>
+              <span className="tabular-nums" style={{ color: 'var(--ps-text-muted)' }}>
                 ${Number(p.costPrice).toFixed(2)}
               </span>
             ),
           },
           {
-            key: 'salePrice',
-            header: 'Precio Venta',
-            sortable: true,
-            align: 'right',
+            key: 'salePrice', header: 'Precio Venta', sortable: true, align: 'right',
             render: (p) => (
-              <span style={{ color: 'var(--ps-gold)' }} className="font-semibold">
+              <span className="font-semibold tabular-nums" style={{ color: 'var(--ps-gold)' }}>
                 ${Number(p.salePrice).toFixed(2)}
               </span>
             ),
           },
           {
-            key: 'isPublished',
-            header: 'Visible',
-            align: 'center',
+            key: 'isPublished', header: 'Visible', align: 'center',
             render: (p) => (
-              <span
-                className="text-xs px-2 py-0.5 rounded-full font-medium"
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                 style={{
-                  background: p.isPublished ? 'rgba(76, 175, 125, 0.15)' : 'rgba(224, 92, 92, 0.15)',
+                  background: p.isPublished ? 'rgba(76,175,125,0.15)' : 'rgba(224,92,92,0.15)',
                   color: p.isPublished ? 'var(--ps-green)' : 'var(--ps-red)',
-                }}
-              >
+                }}>
                 {p.isPublished ? 'Sí' : 'No'}
               </span>
             ),
