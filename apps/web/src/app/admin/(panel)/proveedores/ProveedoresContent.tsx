@@ -3,10 +3,12 @@
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Supplier, Order } from '@persenso/shared';
-import { Plus, Truck, Package } from 'lucide-react';
+import { Plus, Truck, Package, Pencil } from 'lucide-react';
 import { NotaCell } from '@/components/admin/NotaCell';
 import { useState } from 'react';
 import { NewProveedorDialog } from './NewProveedorDialog';
+import { EditProveedorDialog } from './EditProveedorDialog';
+import { EditOrderDialog } from './EditOrderDialog';
 
 interface ProveedoresContentProps {
   suppliers: Supplier[];
@@ -20,6 +22,8 @@ function formatCurrency(amount: number): string {
 export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProps) {
   const [activeTab, setActiveTab] = useState<'suppliers' | 'orders'>('suppliers');
   const [showNew, setShowNew] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
 
@@ -38,6 +42,12 @@ export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProp
       />
       {showNew && activeTab === 'suppliers' && (
         <NewProveedorDialog onClose={() => setShowNew(false)} />
+      )}
+      {editingSupplier && (
+        <EditProveedorDialog supplier={editingSupplier} onClose={() => setEditingSupplier(null)} />
+      )}
+      {editingOrder && (
+        <EditOrderDialog order={editingOrder} suppliers={suppliers} onClose={() => setEditingOrder(null)} />
       )}
 
       {/* Tab switcher */}
@@ -86,6 +96,19 @@ export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProp
               key: 'createdAt', header: 'Registro', sortable: true,
               render: (s) => new Date(s.createdAt).toLocaleDateString('es-VE'),
             },
+            {
+              key: '_actions', header: '',
+              render: (s) => (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingSupplier(s); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                  title="Editar proveedor"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              ),
+            },
           ]}
         />
       ) : (
@@ -123,6 +146,19 @@ export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProp
             {
               key: 'notes', header: 'Notas',
               render: (o) => <NotaCell text={o.notes} />,
+            },
+            {
+              key: '_actions', header: '',
+              render: (o) => (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingOrder(o); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                  title="Editar pedido"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              ),
             },
           ]}
         />
