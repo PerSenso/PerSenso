@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["*.ngrok-free.dev", "*.ngrok.io", "*.ngrok.app"],
   images: {
     remotePatterns: [
       {
@@ -44,7 +45,9 @@ const nextConfig: NextConfig = {
               "img-src 'self' https://res.cloudinary.com data: blob:",
               "font-src 'self' https://fonts.gstatic.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              process.env.NODE_ENV === 'production'
+                ? "script-src 'self' 'unsafe-inline'"
+                : "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               `connect-src 'self' ${apiUrl} https://wa.me`,
             ].join("; "),
           },

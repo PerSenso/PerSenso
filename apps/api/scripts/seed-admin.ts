@@ -7,7 +7,7 @@ async function seed() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
   const prisma = new PrismaClient({ adapter });
 
-  const hash = await bcrypt.hash('admin1234', 10);
+  const hash = await bcrypt.hash('admin1234', 12);
 
   const user = await prisma.user.upsert({
     where: { username: 'admin' },
