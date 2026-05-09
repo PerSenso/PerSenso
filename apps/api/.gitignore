@@ -5,3 +5,4 @@ node_modules
 dist
 /scripts/firebase-export.json
 /scripts/migration-errors.json
+/scripts/comparison-report.json
