@@ -192,9 +192,20 @@ export interface RestockWithChain extends RestockLine {
   sales?: (Sale & { client?: Client; payments?: Payment[] })[];
 }
 
+export interface SupplierWithChain extends Supplier {
+  orders: (Order & {
+    fundingEntries?: FundingEntry[];
+    restocks: (RestockLine & {
+      product?: Product;
+      sales?: (Sale & { client?: Client; payments?: Payment[] })[];
+    })[];
+  })[];
+}
+
 export type TraceResult =
   | { type: 'sale';     data: Sale }
   | { type: 'client';   data: ClientWithSales }
   | { type: 'product';  data: ProductWithRestocks }
   | { type: 'order';    data: OrderWithRestockProducts }
-  | { type: 'restock';  data: RestockWithChain };
+  | { type: 'restock';  data: RestockWithChain }
+  | { type: 'supplier'; data: SupplierWithChain };

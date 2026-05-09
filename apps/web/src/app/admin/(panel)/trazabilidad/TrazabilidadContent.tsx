@@ -11,6 +11,7 @@ import type {
   RestockLine,
   OrderWithRestockProducts,
   RestockWithChain,
+  SupplierWithChain,
 } from '@persenso/shared';
 import {
   Search, User, Package, Layers, ShoppingCart,
@@ -712,6 +713,209 @@ function RestockResult({ data }: { data: TraceResult & { type: 'restock' } }) {
   );
 }
 
+function SupplierResult({ data }: { data: TraceResult & { type: 'supplier' } }) {
+  const supplier = data.data as SupplierWithChain;
+  const orders = supplier.orders ?? [];
+
+  // Aplanar restocks de todas las órdenes
+  const allRestocks = orders.flatMap((o) =>
+    (o.restocks ?? []).map((r) => ({ ...r, _order: o })),
+  );
+
+  // Productos únicos abastecidos por este proveedor
+  const uniqueProducts = new Map<string, { name: string; brand?: string; lots: number; units: number }>();
+  for (const r of allRestocks) {
+    if (r.product?.id) {
+      const cur = uniqueProducts.get(r.product.id) ?? { name: r.product.name, brand: r.product.brand, lots: 0, units: 0 };
+      cur.lots++;
+      cur.units += r.quantity;
+      uniqueProducts.set(r.product.id, cur);
+    }
+  }
+
+  // Clientes únicos que compraron productos de este proveedor
+  const uniqueClients = new Map<string, { name: string; count: number }>();
+  let totalSales = 0;
+  let totalRevenue = 0;
+  for (const r of allRestocks) {
+    for (const s of r.sales ?? []) {
+      totalSales++;
+      totalRevenue += Number(s.total);
+      if (s.client?.id) {
+        const cur = uniqueClients.get(s.client.id) ?? { name: s.client.name, count: 0 };
+        cur.count++;
+        uniqueClients.set(s.client.id, cur);
+      }
+    }
+  }
+
+  const totalUnits = allRestocks.reduce((s, r) => s + r.quantity, 0);
+  const totalCost = allRestocks.reduce((s, r) => s + r.quantity * Number(r.baseUnitCost), 0);
+
+  return (
+    <div className="space-y-6">
+      <EntityHeader icon={Truck} color="var(--ps-text-muted)" label="Proveedor" id={supplier.id} name={supplier.name} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <SectionTitle>Datos del proveedor</SectionTitle>
+          <InfoCard>
+            {supplier.phone && <Row label="Teléfono" value={supplier.phone} />}
+            {supplier.notes && <Row label="Notas" value={supplier.notes} />}
+            <Row label="Registro" value={formatDate(supplier.createdAt)} />
+          </InfoCard>
+        </div>
+        <div>
+          <SectionTitle>Resumen</SectionTitle>
+          <InfoCard>
+            <Row label="Pedidos" value={orders.length} />
+            <Row label="Lotes ingresados" value={allRestocks.length} />
+            <Row label="Unidades totales" value={`${totalUnits} u.`} />
+            <Row label="Costo invertido" value={<span style={{ color: 'var(--ps-gold)' }} className="font-semibold">{formatCurrency(totalCost)}</span>} />
+            <Row label="Ventas derivadas" value={totalSales} />
+            <Row label="Ingreso generado" value={<span style={{ color: 'var(--ps-green)' }} className="font-semibold">{formatCurrency(totalRevenue)}</span>} />
+          </InfoCard>
+        </div>
+      </div>
+
+      {/* Productos abastecidos y clientes finales */}
+      {(uniqueProducts.size > 0 || uniqueClients.size > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {uniqueProducts.size > 0 && (
+            <div>
+              <SectionTitle>Productos que abastece ({uniqueProducts.size})</SectionTitle>
+              <InfoCard>
+                <div className="flex flex-col gap-1.5">
+                  {Array.from(uniqueProducts.entries()).map(([id, p]) => (
+                    <div key={id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <IdBadge id={id} />
+                        <span className="truncate" style={{ color: 'var(--ps-text)' }}>
+                          {p.name}{p.brand ? <span style={{ color: 'var(--ps-text-muted)' }}> · {p.brand}</span> : null}
+                        </span>
+                      </div>
+                      <span className="flex-shrink-0 text-xs" style={{ color: 'var(--ps-text-muted)' }}>
+                        {p.lots} lote{p.lots !== 1 ? 's' : ''} · {p.units}u
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </InfoCard>
+            </div>
+          )}
+          {uniqueClients.size > 0 && (
+            <div>
+              <SectionTitle>Clientes que recibieron sus productos ({uniqueClients.size})</SectionTitle>
+              <InfoCard>
+                <div className="flex flex-col gap-1.5">
+                  {Array.from(uniqueClients.entries()).map(([id, c]) => (
+                    <div key={id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <IdBadge id={id} />
+                        <span style={{ color: 'var(--ps-text)' }}>{c.name}</span>
+                      </div>
+                      <span style={{ color: 'var(--ps-text-muted)' }}>{c.count} venta{c.count !== 1 ? 's' : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              </InfoCard>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pedidos del proveedor */}
+      <div>
+        <SectionTitle>Pedidos a este proveedor ({orders.length})</SectionTitle>
+        <div className="space-y-3">
+          {orders.map((o) => {
+            const orderUnits = (o.restocks ?? []).reduce((s, r) => s + r.quantity, 0);
+            const orderCost = (o.restocks ?? []).reduce((s, r) => s + r.quantity * Number(r.baseUnitCost), 0);
+            return (
+              <InfoCard key={o.id}>
+                {/* Order header */}
+                <div className="flex items-center justify-between mb-2 pb-2" style={{ borderBottom: '1px solid var(--ps-border)' }}>
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--ps-text-muted)' }} />
+                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--ps-text-muted)' }}>Pedido</span>
+                    <IdBadge id={o.id} />
+                    <span className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>{formatDate(o.date)}</span>
+                  </div>
+                  <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--ps-gold)' }}>
+                    {orderUnits}u · {formatCurrency(orderCost)}
+                  </span>
+                </div>
+
+                {/* Restocks (lotes) */}
+                <div className="space-y-1.5">
+                  {(o.restocks ?? []).map((r) => {
+                    const lotSales = r.sales ?? [];
+                    return (
+                      <div key={r.id} className="text-sm">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Layers className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--ps-gold)' }} />
+                            <span className="font-medium truncate" style={{ color: 'var(--ps-text)' }}>{r.product?.name ?? '—'}</span>
+                            <IdBadge id={r.id} />
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <span style={{ color: 'var(--ps-text-muted)' }} className="text-xs tabular-nums">
+                              {r.quantity}u · {formatCurrency(Number(r.baseUnitCost))}/u
+                            </span>
+                            {lotSales.length > 0 && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(76,175,125,0.12)', color: 'var(--ps-green)' }}>
+                                {lotSales.length} venta{lotSales.length !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Ventas anidadas del lote */}
+                        {lotSales.length > 0 && (
+                          <div className="mt-1.5 ml-5 pl-3 space-y-1" style={{ borderLeft: '1px solid var(--ps-border)' }}>
+                            {lotSales.map((s) => (
+                              <div key={s.id} className="flex items-center justify-between text-xs" style={{ color: 'var(--ps-text-muted)' }}>
+                                <div className="flex items-center gap-2">
+                                  <IdBadge id={s.id} />
+                                  <User className="w-3 h-3" />
+                                  <span>{s.client?.name ?? '—'}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <SaleStatus payments={s.payments} total={Number(s.total)} />
+                                  <span className="font-semibold tabular-nums" style={{ color: 'var(--ps-gold)' }}>{formatCurrency(Number(s.total))}</span>
+                                  <span>{formatDate(s.date)}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Funding entries */}
+                {(o.fundingEntries?.length ?? 0) > 0 && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs pt-2 mt-2" style={{ borderTop: '1px solid var(--ps-border)', color: 'var(--ps-text-muted)' }}>
+                    <Wallet className="w-3 h-3" />
+                    <span>Financiado por:</span>
+                    {o.fundingEntries!.map((f) => (
+                      <span key={f.id}>
+                        <span style={{ color: 'var(--ps-text)' }} className="font-medium">{f.investor}</span>
+                        <span> ({formatCurrency(Number(f.amount))} · {f.method})</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </InfoCard>
+            );
+          })}
+          {orders.length === 0 && <p className="text-sm" style={{ color: 'var(--ps-text-muted)' }}>Sin pedidos registrados a este proveedor</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function TrazabilidadContent({ initialId }: TrazabilidadContentProps) {
@@ -760,10 +964,10 @@ export function TrazabilidadContent({ initialId }: TrazabilidadContentProps) {
   };
 
   const typeLabel: Record<TraceResult['type'], string> = {
-    sale: 'Venta', client: 'Cliente', product: 'Producto', order: 'Pedido', restock: 'Lote',
+    sale: 'Venta', client: 'Cliente', product: 'Producto', order: 'Pedido', restock: 'Lote', supplier: 'Proveedor',
   };
   const typeIcon: Record<TraceResult['type'], React.ElementType> = {
-    sale: ShoppingCart, client: User, product: Package, order: ShoppingCart, restock: Layers,
+    sale: ShoppingCart, client: User, product: Package, order: ShoppingCart, restock: Layers, supplier: Truck,
   };
 
   return (
@@ -807,7 +1011,8 @@ export function TrazabilidadContent({ initialId }: TrazabilidadContentProps) {
             { label: 'Cliente', icon: User },
             { label: 'Producto', icon: Package },
             { label: 'Lote', icon: Layers },
-            { label: 'Pedido', icon: Truck },
+            { label: 'Pedido', icon: ShoppingCart },
+            { label: 'Proveedor', icon: Truck },
           ] as const).map(({ label, icon: Icon }) => (
             <span key={label} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full"
               style={{ background: 'var(--ps-surface)', color: 'var(--ps-text-muted)', border: '1px solid var(--ps-border)' }}>
@@ -855,11 +1060,12 @@ export function TrazabilidadContent({ initialId }: TrazabilidadContentProps) {
             })()}
           </div>
 
-          {result.type === 'sale'    && <SaleResult sale={result.data} />}
-          {result.type === 'client'  && <ClientResult data={result as TraceResult & { type: 'client' }} />}
-          {result.type === 'product' && <ProductResult data={result as TraceResult & { type: 'product' }} />}
-          {result.type === 'order'   && <OrderResult data={result as TraceResult & { type: 'order' }} />}
-          {result.type === 'restock' && <RestockResult data={result as TraceResult & { type: 'restock' }} />}
+          {result.type === 'sale'     && <SaleResult sale={result.data} />}
+          {result.type === 'client'   && <ClientResult data={result as TraceResult & { type: 'client' }} />}
+          {result.type === 'product'  && <ProductResult data={result as TraceResult & { type: 'product' }} />}
+          {result.type === 'order'    && <OrderResult data={result as TraceResult & { type: 'order' }} />}
+          {result.type === 'restock'  && <RestockResult data={result as TraceResult & { type: 'restock' }} />}
+          {result.type === 'supplier' && <SupplierResult data={result as TraceResult & { type: 'supplier' }} />}
         </div>
       )}
 

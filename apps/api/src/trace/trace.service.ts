@@ -110,6 +110,29 @@ export class TraceService {
     });
     if (restock) return { type: 'restock' as const, data: restock };
 
+    // Supplier — todas las órdenes, lotes, productos abastecidos, ventas derivadas
+    const supplier = await this.prisma.supplier.findUnique({
+      where: { id },
+      include: {
+        orders: {
+          orderBy: { date: 'desc' },
+          include: {
+            fundingEntries: true,
+            restocks: {
+              include: {
+                product: true,
+                sales: {
+                  include: { client: true, payments: true },
+                  orderBy: { date: 'desc' },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (supplier) return { type: 'supplier' as const, data: supplier };
+
     throw new NotFoundException(`ID "${id}" no encontrado en ninguna entidad`);
   }
 }
