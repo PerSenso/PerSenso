@@ -101,6 +101,9 @@ export interface RestockLine {
   quantity: number;
   baseUnitCost: number;
   createdAt: string;
+  product?: Product;
+  order?: Order;
+  sales?: Sale[];
 }
 
 export interface FundingEntry {
@@ -164,3 +167,34 @@ export interface ReportsSummary {
   totalDebt: number;
   marginByProduct: { name: string; avg_margin_pct: number }[];
 }
+
+// ── Trazabilidad ─────────────────────────────────────────────────────────────
+
+export interface ClientWithSales extends Client {
+  sales: Sale[];
+}
+
+export interface ProductWithRestocks extends ProductAdmin {
+  restocks: (RestockLine & { sales?: Sale[] })[];
+  sales?: Sale[];
+}
+
+export interface OrderWithRestockProducts extends Order {
+  restocks: (RestockLine & {
+    product?: Product;
+    sales?: (Sale & { client?: Client; payments?: Payment[] })[];
+  })[];
+}
+
+export interface RestockWithChain extends RestockLine {
+  product?: Product;
+  order?: Order;
+  sales?: (Sale & { client?: Client; payments?: Payment[] })[];
+}
+
+export type TraceResult =
+  | { type: 'sale';     data: Sale }
+  | { type: 'client';   data: ClientWithSales }
+  | { type: 'product';  data: ProductWithRestocks }
+  | { type: 'order';    data: OrderWithRestockProducts }
+  | { type: 'restock';  data: RestockWithChain };
