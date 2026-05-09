@@ -10,6 +10,10 @@ import { StorageModule } from './storage/storage.module';
 import { ClientsModule } from './clients/clients.module';
 import { SalesModule } from './sales/sales.module';
 import { PaymentsModule } from './payments/payments.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { OrdersModule } from './orders/orders.module';
+import { LedgerModule } from './ledger/ledger.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -21,6 +25,10 @@ import { PaymentsModule } from './payments/payments.module';
     ClientsModule,
     SalesModule,
     PaymentsModule,
+    SuppliersModule,
+    OrdersModule,
+    LedgerModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

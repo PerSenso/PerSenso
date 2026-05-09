@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/nestjs';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { MulterExceptionFilter } from './common/filters/multer-exception.filter';
+import { ViewerSanitizerInterceptor } from './common/interceptors/viewer-sanitizer.interceptor';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
@@ -27,6 +28,8 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new MulterExceptionFilter());
+
+  app.useGlobalInterceptors(new ViewerSanitizerInterceptor());
 
   app.useGlobalPipes(
     new ValidationPipe({
