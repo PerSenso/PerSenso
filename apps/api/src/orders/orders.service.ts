@@ -9,7 +9,11 @@ export class OrdersService {
 
   findAll() {
     return this.prisma.order.findMany({
-      include: { supplier: true, restocks: true, fundingEntries: true },
+      include: {
+        supplier: true,
+        restocks: { include: { product: true } },
+        fundingEntries: true,
+      },
       orderBy: { date: 'desc' },
     });
   }

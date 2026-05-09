@@ -132,13 +132,21 @@ export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProp
               render: (o) => (o.supplierId ? supplierMap.get(o.supplierId) : '—') || 'Desconocido',
             },
             {
-              key: 'restocks', header: 'Items', align: 'center',
-              render: (o) => (
-                <span className="text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(201,168,76,0.1)', color: 'var(--ps-gold)' }}>
-                  {o.restocks?.length || 0}
-                </span>
-              ),
+              key: 'restocks', header: 'Productos',
+              render: (o) => {
+                const lines = o.restocks ?? [];
+                if (lines.length === 0) return <span style={{ color: 'var(--ps-text-muted)' }}>—</span>;
+                return (
+                  <div className="flex flex-col gap-0.5">
+                    {lines.map((r) => (
+                      <span key={r.id} className="text-xs" style={{ color: 'var(--ps-text)' }}>
+                        {r.product?.name ?? '—'}
+                        <span style={{ color: 'var(--ps-text-muted)' }}> · {r.quantity}u · ${Number(r.baseUnitCost).toFixed(2)}</span>
+                      </span>
+                    ))}
+                  </div>
+                );
+              },
             },
             {
               key: 'shippingCost', header: 'Envío', align: 'right',
