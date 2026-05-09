@@ -1,4 +1,5 @@
-import { api } from '@/lib/api-client';
+import { redirect } from 'next/navigation';
+import { api, ApiError } from '@/lib/api-client';
 import { DashboardContent } from './DashboardContent';
 
 export default async function DashboardPage() {
@@ -14,8 +15,8 @@ export default async function DashboardPage() {
       api.products.list(),
       api.ledger.get(),
     ]);
-  } catch {
-    // If API is not available, show empty state
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) redirect('/admin/login');
     sales = [];
     clients = [];
     products = [];
