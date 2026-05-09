@@ -7,6 +7,7 @@ import type { ProductAdmin } from '@persenso/shared';
 import { Plus, AlertTriangle, Pencil } from 'lucide-react';
 import { NewProductoDialog } from './NewProductoDialog';
 import { EditProductoDialog } from './EditProductoDialog';
+import { IdBadge } from '@/components/admin/IdBadge';
 
 interface InventarioContentProps {
   products: ProductAdmin[];
@@ -95,6 +96,7 @@ export function InventarioContent({ products }: InventarioContentProps) {
         searchKeys={['name', 'brand']}
         filterFn={hasFilter ? filterFn : undefined}
         columns={[
+          { key: '_id', header: 'ID', render: (p) => <IdBadge id={p.id} /> },
           {
             key: 'name', header: 'Producto', sortable: true,
             render: (p) => (

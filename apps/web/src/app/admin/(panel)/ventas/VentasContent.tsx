@@ -3,11 +3,13 @@
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Sale, Client, ProductAdmin } from '@persenso/shared';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, GitBranch } from 'lucide-react';
 import { useState } from 'react';
 import { NewSaleDialog } from './NewSaleDialog';
 import { EditSaleDialog } from './EditSaleDialog';
 import { NotaCell } from '@/components/admin/NotaCell';
+import { IdBadge } from '@/components/admin/IdBadge';
+import { TraceChainModal } from '@/components/admin/TraceChainModal';
 
 interface VentasContentProps {
   sales: Sale[];
@@ -64,6 +66,7 @@ const chipActiveStyle = (value: StatusFilter): React.CSSProperties => ({
 export function VentasContent({ sales, clients, products }: VentasContentProps) {
   const [showNewSale, setShowNewSale] = useState(false);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [tracingSale, setTracingSale] = useState<Sale | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const totalRevenue = sales.reduce((acc, s) => acc + Number(s.total), 0);
@@ -116,6 +119,10 @@ export function VentasContent({ sales, clients, products }: VentasContentProps) 
         filterFn={filterFn}
         columns={[
           {
+            key: '_id', header: 'ID',
+            render: (s) => <IdBadge id={s.id} />,
+          },
+          {
             key: 'date', header: 'Fecha', sortable: true,
             render: (s) => new Date(s.date).toLocaleDateString('es-VE'),
           },
@@ -146,14 +153,24 @@ export function VentasContent({ sales, clients, products }: VentasContentProps) 
           {
             key: '_actions', header: '',
             render: (s) => (
-              <button
-                onClick={(e) => { e.stopPropagation(); setEditingSale(s); }}
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
-                title="Editar venta"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setTracingSale(s); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                  title="Ver trazabilidad"
+                >
+                  <GitBranch className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingSale(s); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                  title="Editar venta"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ),
           },
         ]}
@@ -165,6 +182,10 @@ export function VentasContent({ sales, clients, products }: VentasContentProps) 
 
       {editingSale && (
         <EditSaleDialog sale={editingSale} onClose={() => setEditingSale(null)} />
+      )}
+
+      {tracingSale && (
+        <TraceChainModal sale={tracingSale} onClose={() => setTracingSale(null)} />
       )}
     </>
   );

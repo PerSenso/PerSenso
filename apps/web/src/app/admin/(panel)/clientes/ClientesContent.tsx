@@ -8,6 +8,7 @@ import { Plus, Pencil } from 'lucide-react';
 import { NewClienteDialog } from './NewClienteDialog';
 import { EditClienteDialog } from './EditClienteDialog';
 import { NotaCell } from '@/components/admin/NotaCell';
+import { IdBadge } from '@/components/admin/IdBadge';
 
 interface ClientesContentProps {
   clients: ClientWithDebt[];
@@ -46,6 +47,7 @@ export function ClientesContent({ clients }: ClientesContentProps) {
         searchPlaceholder="Buscar por nombre, cédula o teléfono…"
         searchKeys={['name', 'ci', 'phone']}
         columns={[
+          { key: '_id', header: 'ID', render: (c) => <IdBadge id={c.id} /> },
           {
             key: 'name', header: 'Nombre', sortable: true,
             render: (c) => (

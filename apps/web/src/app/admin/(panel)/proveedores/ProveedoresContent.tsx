@@ -4,6 +4,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Supplier, Order } from '@persenso/shared';
 import { Plus, Truck, Package, Pencil } from 'lucide-react';
+import { IdBadge } from '@/components/admin/IdBadge';
 import { NotaCell } from '@/components/admin/NotaCell';
 import { useState } from 'react';
 import { NewProveedorDialog } from './NewProveedorDialog';
@@ -81,6 +82,7 @@ export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProp
           searchPlaceholder="Buscar por nombre o teléfono…"
           searchKeys={['name', 'phone', 'notes']}
           columns={[
+            { key: '_id', header: 'ID', render: (s) => <IdBadge id={s.id} /> },
             {
               key: 'name', header: 'Nombre', sortable: true,
               render: (s) => (
@@ -120,6 +122,7 @@ export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProp
           searchPlaceholder="Buscar pedido…"
           searchKeys={['notes']}
           columns={[
+            { key: '_id', header: 'ID', render: (o) => <IdBadge id={o.id} /> },
             {
               key: 'date', header: 'Fecha', sortable: true,
               render: (o) => new Date(o.date).toLocaleDateString('es-VE'),
