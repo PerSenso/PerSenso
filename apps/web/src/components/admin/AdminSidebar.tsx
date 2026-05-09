@@ -12,6 +12,7 @@ import {
   Receipt,
   Truck,
   BarChart3,
+  GitBranch,
   LogOut,
   ChevronLeft,
   Sun,
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { href: '/admin/gastos', label: 'Gastos', icon: Receipt },
   { href: '/admin/proveedores', label: 'Proveedores', icon: Truck },
   { href: '/admin/reportes', label: 'Reportes', icon: BarChart3 },
+  { href: '/admin/trazabilidad', label: 'Trazabilidad', icon: GitBranch },
 ];
 
 export function AdminSidebar() {
