@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { ProductAdmin } from '@persenso/shared';
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle, Pencil } from 'lucide-react';
 import { NewProductoDialog } from './NewProductoDialog';
+import { EditProductoDialog } from './EditProductoDialog';
 
 interface InventarioContentProps {
   products: ProductAdmin[];
@@ -22,6 +23,7 @@ const GENDER_CHIPS: { value: GenderFilter; label: string }[] = [
 
 export function InventarioContent({ products }: InventarioContentProps) {
   const [showNew, setShowNew] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ProductAdmin | null>(null);
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [stockCritico, setStockCritico] = useState(false);
 
@@ -48,6 +50,7 @@ export function InventarioContent({ products }: InventarioContentProps) {
         }
       />
       {showNew && <NewProductoDialog onClose={() => setShowNew(false)} />}
+      {editingProduct && <EditProductoDialog product={editingProduct} onClose={() => setEditingProduct(null)} />}
 
       {/* Chips de filtro */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -154,6 +157,19 @@ export function InventarioContent({ products }: InventarioContentProps) {
                 }}>
                 {p.isPublished ? 'Sí' : 'No'}
               </span>
+            ),
+          },
+          {
+            key: '_actions', header: '',
+            render: (p) => (
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditingProduct(p); }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                title="Editar producto"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
             ),
           },
         ]}
