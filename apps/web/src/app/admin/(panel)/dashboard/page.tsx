@@ -31,7 +31,7 @@ export default async function DashboardPage() {
       balance={ledger.balance}
       totalIn={ledger.totalIn}
       totalOut={ledger.totalOut}
-      recentSales={sales.slice(-5).reverse()}
+      recentSales={sales.slice(0, 5)}
     />
   );
 }

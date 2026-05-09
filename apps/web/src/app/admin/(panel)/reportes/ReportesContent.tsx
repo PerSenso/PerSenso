@@ -60,6 +60,29 @@ export function ReportesContent({ reports }: ReportesContentProps) {
           { key: 'avg_margin', header: 'Margen %', sortable: true, align: 'right', render: (p) => <span style={{ color: 'var(--ps-green)' }}>{Number(p.avg_margin).toFixed(1)}%</span> },
         ]}
       />
+
+      {/* Margin by Product */}
+      {reports.marginByProduct.length > 0 && (
+        <div className="card-persenso p-6 mt-8">
+          <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>Margen por Producto</h2>
+          <div className="space-y-3">
+            {reports.marginByProduct.map((m) => (
+              <div key={m.name} className="flex items-center gap-4">
+                <span className="text-sm flex-1 truncate" style={{ color: 'var(--ps-text)' }}>{m.name}</span>
+                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--ps-border)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${Math.min(m.avg_margin_pct, 100)}%`, background: 'var(--ps-gold)' }}
+                  />
+                </div>
+                <span className="text-sm font-semibold w-14 text-right" style={{ color: 'var(--ps-gold)' }}>
+                  {Number(m.avg_margin_pct).toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }

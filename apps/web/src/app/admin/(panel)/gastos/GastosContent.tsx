@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import { AdminStatCard } from '@/components/admin/AdminStatCard';
 import type { CashMovement } from '@persenso/shared';
 import { Receipt, Plus } from 'lucide-react';
+import { NewGastoDialog } from './NewGastoDialog';
 
 interface GastosContentProps {
   gastos: CashMovement[];
@@ -16,18 +18,21 @@ function formatCurrency(amount: number): string {
 }
 
 export function GastosContent({ gastos, totalGastos }: GastosContentProps) {
+  const [showNew, setShowNew] = useState(false);
+
   return (
     <>
       <AdminPageHeader
         title="Gastos"
         subtitle={`${gastos.length} movimientos de retiro`}
         actions={
-          <button className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
+          <button onClick={() => setShowNew(true)} className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
             <Plus className="w-4 h-4" />
             Registrar Gasto
           </button>
         }
       />
+      {showNew && <NewGastoDialog onClose={() => setShowNew(false)} />}
 
       <div className="mb-8">
         <AdminStatCard

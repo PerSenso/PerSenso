@@ -1,27 +1,32 @@
 'use client';
 
+import { useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Client } from '@persenso/shared';
 import { Plus } from 'lucide-react';
+import { NewClienteDialog } from './NewClienteDialog';
 
 interface ClientesContentProps {
   clients: Client[];
 }
 
 export function ClientesContent({ clients }: ClientesContentProps) {
+  const [showNew, setShowNew] = useState(false);
+
   return (
     <>
       <AdminPageHeader
         title="Clientes"
         subtitle={`${clients.length} clientes registrados`}
         actions={
-          <button className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
+          <button onClick={() => setShowNew(true)} className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
             <Plus className="w-4 h-4" />
             Nuevo Cliente
           </button>
         }
       />
+      {showNew && <NewClienteDialog onClose={() => setShowNew(false)} />}
 
       <AdminDataTable
         data={clients}

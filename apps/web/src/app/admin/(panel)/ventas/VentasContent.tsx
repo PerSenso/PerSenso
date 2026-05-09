@@ -29,9 +29,6 @@ function getStatusBadge() {
 export function VentasContent({ sales, clients, products }: VentasContentProps) {
   const [showNewSale, setShowNewSale] = useState(false);
 
-  const clientMap = new Map(clients.map((c) => [c.id, c.name]));
-  const productMap = new Map(products.map((p) => [p.id, p.name]));
-
   const totalRevenue = sales.reduce((acc, s) => acc + Number(s.total), 0);
 
   return (

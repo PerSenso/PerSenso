@@ -5,6 +5,7 @@ import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Supplier, Order } from '@persenso/shared';
 import { Plus, Truck } from 'lucide-react';
 import { useState } from 'react';
+import { NewProveedorDialog } from './NewProveedorDialog';
 
 interface ProveedoresContentProps {
   suppliers: Supplier[];
@@ -17,6 +18,7 @@ function formatCurrency(amount: number): string {
 
 export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProps) {
   const [activeTab, setActiveTab] = useState<'suppliers' | 'orders'>('suppliers');
+  const [showNew, setShowNew] = useState(false);
 
   const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
 
@@ -26,12 +28,13 @@ export function ProveedoresContent({ suppliers, orders }: ProveedoresContentProp
         title="Proveedores & Pedidos"
         subtitle={`${suppliers.length} proveedores · ${orders.length} pedidos`}
         actions={
-          <button className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
+          <button onClick={() => setShowNew(true)} className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
             <Plus className="w-4 h-4" />
             {activeTab === 'suppliers' ? 'Nuevo Proveedor' : 'Nuevo Pedido'}
           </button>
         }
       />
+      {showNew && activeTab === 'suppliers' && <NewProveedorDialog onClose={() => setShowNew(false)} />}
 
       {/* Tab switcher */}
       <div className="flex gap-1 mb-6 p-1 rounded-lg w-fit" style={{ background: 'var(--ps-surface)' }}>

@@ -30,7 +30,11 @@ export class LedgerService {
       count: Number(p.count),
     }));
 
-    const totalIn = paymentsByMethod.reduce((acc, p) => acc + p.total, 0);
+    const paymentsIn = paymentsByMethod.reduce((acc, p) => acc + p.total, 0);
+    const manualIn = movements
+      .filter((m) => m.type === 'ingreso')
+      .reduce((acc, m) => acc + Number(m.amount), 0);
+    const totalIn = paymentsIn + manualIn;
     const restockTotal = Number(restockCostRows[0]?.total ?? 0);
     const manualOut = movements
       .filter((m) => m.type === 'retiro')
