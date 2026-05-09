@@ -27,6 +27,11 @@ export class ClientsController {
     return this.clientsService.findAll();
   }
 
+  @Get('with-debt')
+  findAllWithDebt() {
+    return this.clientsService.findAllWithDebt();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.clientsService.findOne(id);

@@ -9,7 +9,7 @@ export class SalesService {
 
   findAll() {
     return this.prisma.sale.findMany({
-      include: { client: true, product: true },
+      include: { client: true, product: true, payments: true },
       orderBy: { date: 'desc' },
     });
   }

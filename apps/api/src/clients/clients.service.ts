@@ -11,6 +11,52 @@ export class ClientsService {
     return this.prisma.client.findMany({ orderBy: { name: 'asc' } });
   }
 
+  async findAllWithDebt() {
+    const rows = await this.prisma.$queryRaw<
+      {
+        id: string;
+        name: string;
+        ci: string | null;
+        phone: string | null;
+        address: string | null;
+        notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        debt: unknown;
+      }[]
+    >`
+      SELECT
+        c.id,
+        c.name,
+        c.ci,
+        c.phone,
+        c.address,
+        c.notes,
+        c."createdAt",
+        c."updatedAt",
+        COALESCE(
+          (SELECT SUM(s.total) FROM "Sale" s WHERE s."clientId" = c.id), 0
+        ) - COALESCE(
+          (SELECT SUM(p.amount) FROM "Payment" p
+           JOIN "Sale" s2 ON p."saleId" = s2.id
+           WHERE s2."clientId" = c.id), 0
+        ) AS debt
+      FROM "Client" c
+      ORDER BY c.name ASC
+    `;
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      ci: row.ci ?? undefined,
+      phone: row.phone ?? undefined,
+      address: row.address ?? undefined,
+      notes: row.notes ?? undefined,
+      createdAt: (row.createdAt as Date).toISOString(),
+      updatedAt: (row.updatedAt as Date).toISOString(),
+      debt: Number(row.debt ?? 0),
+    }));
+  }
+
   async findOne(id: string) {
     const client = await this.prisma.client.findUnique({ where: { id } });
     if (!client) throw new NotFoundException('Cliente no encontrado');
