@@ -12,6 +12,10 @@ export interface Client {
   updatedAt: string;
 }
 
+export interface ClientWithDebt extends Client {
+  debt: number;
+}
+
 export interface Sale {
   id: string;
   clientId: string;
@@ -27,6 +31,7 @@ export interface Sale {
   updatedAt: string;
   client?: Client;
   product?: Product;
+  payments?: Payment[];
 }
 
 export interface SaleAdmin extends Sale {
