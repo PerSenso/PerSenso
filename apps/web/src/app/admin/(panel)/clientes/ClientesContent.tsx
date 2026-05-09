@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { ClientWithDebt } from '@persenso/shared';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { NewClienteDialog } from './NewClienteDialog';
+import { EditClienteDialog } from './EditClienteDialog';
 import { NotaCell } from '@/components/admin/NotaCell';
 
 interface ClientesContentProps {
@@ -19,6 +20,7 @@ function formatDebt(debt: number) {
 
 export function ClientesContent({ clients }: ClientesContentProps) {
   const [showNew, setShowNew] = useState(false);
+  const [editingClient, setEditingClient] = useState<ClientWithDebt | null>(null);
 
   return (
     <>
@@ -34,6 +36,7 @@ export function ClientesContent({ clients }: ClientesContentProps) {
         }
       />
       {showNew && <NewClienteDialog onClose={() => setShowNew(false)} />}
+      {editingClient && <EditClienteDialog client={editingClient} onClose={() => setEditingClient(null)} />}
 
       <AdminDataTable
         data={clients}
@@ -66,6 +69,19 @@ export function ClientesContent({ clients }: ClientesContentProps) {
                 style={{ color: c.debt > 0 ? 'var(--ps-red)' : 'var(--ps-text-muted)' }}>
                 {formatDebt(c.debt)}
               </span>
+            ),
+          },
+          {
+            key: '_actions', header: '',
+            render: (c) => (
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditingClient(c); }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                title="Editar cliente"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
             ),
           },
         ]}
