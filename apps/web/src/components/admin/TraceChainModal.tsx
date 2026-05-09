@@ -91,22 +91,6 @@ export function TraceChainModal({ sale, onClose }: TraceChainModalProps) {
       maxWidth="max-w-md"
     >
       <div className="space-y-0">
-        {/* VENTA */}
-        <ChainStep icon={ShoppingCart} color="var(--ps-gold)" label="Venta" id={sale.id}>
-          <Row label="Fecha" value={new Date(sale.date).toLocaleDateString('es-VE')} />
-          <Row label="Total" value={<span style={{ color: 'var(--ps-gold)' }} className="font-semibold">{formatCurrency(Number(sale.total))}</span>} />
-          <Row label="Pagado" value={<span style={{ color: 'var(--ps-green)' }}>{formatCurrency(paid)}</span>} />
-          {pending > 0 && <Row label="Pendiente" value={<span style={{ color: 'var(--ps-red)' }}>{formatCurrency(pending)}</span>} />}
-          {sale.profitAtSale != null && (
-            <Row label="Ganancia" value={
-              <span style={{ color: Number(sale.profitAtSale) >= 0 ? 'var(--ps-green)' : 'var(--ps-red)' }}>
-                {formatCurrency(Number(sale.profitAtSale))}
-                {sale.marginPctAtSale != null && ` (${Number(sale.marginPctAtSale).toFixed(1)}%)`}
-              </span>
-            } />
-          )}
-        </ChainStep>
-
         {/* CLIENTE */}
         <ChainStep icon={User} color="var(--ps-text-muted)" label="Cliente" id={sale.client?.id ?? sale.clientId}>
           <Row label="Nombre" value={sale.client?.name ?? '—'} />
@@ -120,6 +104,22 @@ export function TraceChainModal({ sale, onClose }: TraceChainModalProps) {
           {sale.product?.brand && <Row label="Marca" value={sale.product.brand} />}
           {sale.unitCostAtSale != null && (
             <Row label="Costo (snapshot)" value={formatCurrency(Number(sale.unitCostAtSale))} />
+          )}
+        </ChainStep>
+
+        {/* VENTA */}
+        <ChainStep icon={ShoppingCart} color="var(--ps-gold)" label="Venta" id={sale.id}>
+          <Row label="Fecha" value={new Date(sale.date).toLocaleDateString('es-VE')} />
+          <Row label="Total" value={<span style={{ color: 'var(--ps-gold)' }} className="font-semibold">{formatCurrency(Number(sale.total))}</span>} />
+          <Row label="Pagado" value={<span style={{ color: 'var(--ps-green)' }}>{formatCurrency(paid)}</span>} />
+          {pending > 0 && <Row label="Pendiente" value={<span style={{ color: 'var(--ps-red)' }}>{formatCurrency(pending)}</span>} />}
+          {sale.profitAtSale != null && (
+            <Row label="Ganancia" value={
+              <span style={{ color: Number(sale.profitAtSale) >= 0 ? 'var(--ps-green)' : 'var(--ps-red)' }}>
+                {formatCurrency(Number(sale.profitAtSale))}
+                {sale.marginPctAtSale != null && ` (${Number(sale.marginPctAtSale).toFixed(1)}%)`}
+              </span>
+            } />
           )}
         </ChainStep>
 
