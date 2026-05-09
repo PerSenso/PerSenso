@@ -6,6 +6,7 @@ import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import { AdminStatCard } from '@/components/admin/AdminStatCard';
 import type { CashMovement } from '@persenso/shared';
 import { Receipt, Plus } from 'lucide-react';
+import { NotaCell } from '@/components/admin/NotaCell';
 import { NewGastoDialog } from './NewGastoDialog';
 
 interface GastosContentProps {
@@ -26,7 +27,8 @@ export function GastosContent({ gastos, totalGastos }: GastosContentProps) {
         title="Gastos"
         subtitle={`${gastos.length} movimientos de retiro`}
         actions={
-          <button onClick={() => setShowNew(true)} className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
+          <button onClick={() => setShowNew(true)}
+            className="btn-gold flex items-center gap-2 px-4 py-2 text-sm">
             <Plus className="w-4 h-4" />
             Registrar Gasto
           </button>
@@ -47,43 +49,27 @@ export function GastosContent({ gastos, totalGastos }: GastosContentProps) {
         data={gastos}
         keyExtractor={(m) => m.id}
         emptyMessage="No hay gastos registrados"
+        searchable
+        searchPlaceholder="Buscar por fuente o método…"
+        searchKeys={['source', 'method', 'notes']}
         columns={[
           {
-            key: 'date',
-            header: 'Fecha',
-            sortable: true,
+            key: 'date', header: 'Fecha', sortable: true,
             render: (m) => new Date(m.date).toLocaleDateString('es-VE'),
           },
+          { key: 'source', header: 'Fuente', sortable: true, render: (m) => m.source },
+          { key: 'method', header: 'Método', render: (m) => m.method },
           {
-            key: 'source',
-            header: 'Fuente',
-            sortable: true,
-            render: (m) => m.source,
-          },
-          {
-            key: 'method',
-            header: 'Método',
-            render: (m) => m.method,
-          },
-          {
-            key: 'amount',
-            header: 'Monto',
-            sortable: true,
-            align: 'right',
+            key: 'amount', header: 'Monto', sortable: true, align: 'right',
             render: (m) => (
-              <span className="font-semibold" style={{ color: 'var(--ps-red)' }}>
+              <span className="font-semibold tabular-nums" style={{ color: 'var(--ps-red)' }}>
                 -{formatCurrency(Number(m.amount))}
               </span>
             ),
           },
           {
-            key: 'notes',
-            header: 'Notas',
-            render: (m) => (
-              <span className="text-xs truncate max-w-[200px] block" style={{ color: 'var(--ps-text-muted)' }}>
-                {m.notes || '—'}
-              </span>
-            ),
+            key: 'notes', header: 'Notas',
+            render: (m) => <NotaCell text={m.notes} />,
           },
         ]}
       />

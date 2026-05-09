@@ -5,6 +5,7 @@ import { AdminStatCard } from '@/components/admin/AdminStatCard';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { LedgerSummary } from '@persenso/shared';
 import { Wallet, TrendingUp, TrendingDown, CreditCard } from 'lucide-react';
+import { NotaCell } from '@/components/admin/NotaCell';
 
 interface SaldoContentProps {
   ledger: LedgerSummary;
@@ -27,45 +28,30 @@ export function SaldoContent({ ledger }: SaldoContentProps) {
           icon={Wallet}
           color={ledger.balance >= 0 ? 'green' : 'red'}
         />
-        <AdminStatCard
-          title="Total Ingresos"
-          value={formatCurrency(ledger.totalIn)}
-          icon={TrendingUp}
-          color="green"
-        />
-        <AdminStatCard
-          title="Total Egresos"
-          value={formatCurrency(ledger.totalOut)}
-          icon={TrendingDown}
-          color="red"
-        />
+        <AdminStatCard title="Total Ingresos" value={formatCurrency(ledger.totalIn)} icon={TrendingUp} color="green" />
+        <AdminStatCard title="Total Egresos" value={formatCurrency(ledger.totalOut)} icon={TrendingDown} color="red" />
       </div>
 
       {/* Payments by method */}
       {ledger.paymentsByMethod.length > 0 && (
         <div className="card-persenso p-6 mb-8">
-          <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>
+          <h2 className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>
             Ingresos por Método de Pago
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {ledger.paymentsByMethod.map((pm) => (
-              <div
-                key={pm.method}
-                className="p-3 rounded-lg"
-                style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}
-              >
+              <div key={pm.method} className="p-3 rounded-lg"
+                style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
                 <div className="flex items-center gap-2 mb-1">
                   <CreditCard className="w-3 h-3" style={{ color: 'var(--ps-gold)' }} />
                   <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--ps-text-muted)' }}>
                     {pm.method}
                   </span>
                 </div>
-                <p className="text-lg font-semibold" style={{ color: 'var(--ps-text)' }}>
+                <p className="text-lg font-semibold tabular-nums" style={{ color: 'var(--ps-text)' }}>
                   {formatCurrency(pm.total)}
                 </p>
-                <p className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>
-                  {pm.count} pagos
-                </p>
+                <p className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>{pm.count} pagos</p>
               </div>
             ))}
           </div>
@@ -74,67 +60,47 @@ export function SaldoContent({ ledger }: SaldoContentProps) {
 
       {/* Movements table */}
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>
+        <h2 className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>
           Movimientos Manuales
         </h2>
         <AdminDataTable
           data={ledger.movements}
           keyExtractor={(m) => m.id}
           emptyMessage="No hay movimientos manuales registrados"
+          searchable
+          searchPlaceholder="Buscar por fuente, método o tipo…"
+          searchKeys={['source', 'method', 'type', 'notes']}
           columns={[
             {
-              key: 'date',
-              header: 'Fecha',
-              sortable: true,
+              key: 'date', header: 'Fecha', sortable: true,
               render: (m) => new Date(m.date).toLocaleDateString('es-VE'),
             },
             {
-              key: 'type',
-              header: 'Tipo',
+              key: 'type', header: 'Tipo',
               render: (m) => (
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full font-medium"
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                   style={{
-                    background: m.type === 'ingreso' ? 'rgba(76, 175, 125, 0.15)' : 'rgba(224, 92, 92, 0.15)',
+                    background: m.type === 'ingreso' ? 'rgba(76,175,125,0.15)' : 'rgba(224,92,92,0.15)',
                     color: m.type === 'ingreso' ? 'var(--ps-green)' : 'var(--ps-red)',
-                  }}
-                >
+                  }}>
                   {m.type === 'ingreso' ? '↑ Ingreso' : '↓ Retiro'}
                 </span>
               ),
             },
+            { key: 'source', header: 'Fuente', render: (m) => m.source },
+            { key: 'method', header: 'Método', render: (m) => m.method },
             {
-              key: 'source',
-              header: 'Fuente',
-              render: (m) => m.source,
-            },
-            {
-              key: 'method',
-              header: 'Método',
-              render: (m) => m.method,
-            },
-            {
-              key: 'amount',
-              header: 'Monto',
-              sortable: true,
-              align: 'right',
+              key: 'amount', header: 'Monto', sortable: true, align: 'right',
               render: (m) => (
-                <span
-                  className="font-semibold"
-                  style={{ color: m.type === 'ingreso' ? 'var(--ps-green)' : 'var(--ps-red)' }}
-                >
+                <span className="font-semibold tabular-nums"
+                  style={{ color: m.type === 'ingreso' ? 'var(--ps-green)' : 'var(--ps-red)' }}>
                   {m.type === 'ingreso' ? '+' : '-'}{formatCurrency(Number(m.amount))}
                 </span>
               ),
             },
             {
-              key: 'notes',
-              header: 'Notas',
-              render: (m) => (
-                <span className="text-xs truncate max-w-[150px] block" style={{ color: 'var(--ps-text-muted)' }}>
-                  {m.notes || '—'}
-                </span>
-              ),
+              key: 'notes', header: 'Notas',
+              render: (m) => <NotaCell text={m.notes} />,
             },
           ]}
         />
