@@ -32,6 +32,7 @@ export interface Sale {
   client?: Client;
   product?: Product;
   payments?: Payment[];
+  restockSource?: RestockLine & { order?: Order };
 }
 
 export interface SaleAdmin extends Sale {
@@ -114,6 +115,7 @@ export interface Order {
   id: string;
   date: string;
   supplierId?: string;
+  supplier?: Supplier;
   shippingCost: number;
   marketingCost: number;
   notes?: string;

@@ -7,9 +7,25 @@ import { UpdateSaleDto } from './dto/update-sale.dto';
 export class SalesService {
   constructor(private prisma: PrismaService) {}
 
+  private readonly saleInclude = {
+    client: true,
+    product: true,
+    payments: true,
+    restockSource: {
+      include: {
+        order: {
+          include: {
+            supplier: true,
+            fundingEntries: true,
+          },
+        },
+      },
+    },
+  } as const;
+
   findAll() {
     return this.prisma.sale.findMany({
-      include: { client: true, product: true, payments: true },
+      include: this.saleInclude,
       orderBy: { date: 'desc' },
     });
   }
@@ -17,7 +33,7 @@ export class SalesService {
   async findOne(id: string) {
     const sale = await this.prisma.sale.findUnique({
       where: { id },
-      include: { client: true, product: true, payments: true },
+      include: this.saleInclude,
     });
     if (!sale) throw new NotFoundException('Venta no encontrada');
     return sale;
