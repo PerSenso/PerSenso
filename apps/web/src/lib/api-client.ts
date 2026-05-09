@@ -30,7 +30,8 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    throw new ApiError(res.status, `API error ${res.status}: ${path}`);
+    const detail = await res.text().catch(() => '');
+    throw new ApiError(res.status, detail || `API error ${res.status}: ${path}`);
   }
 
   const text = await res.text();
@@ -115,6 +116,8 @@ export const api = {
   // Clients
   clients: {
     list: () => apiFetch<import('@persenso/shared').Client[]>('/clients'),
+    listWithDebt: () =>
+      apiFetch<import('@persenso/shared').ClientWithDebt[]>('/clients/with-debt'),
     getById: (id: string) =>
       apiFetch<import('@persenso/shared').Client>(`/clients/${id}`),
     getDebt: (id: string) =>
