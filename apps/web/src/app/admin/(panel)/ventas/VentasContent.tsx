@@ -3,9 +3,10 @@
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Sale, Client, ProductAdmin } from '@persenso/shared';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { NewSaleDialog } from './NewSaleDialog';
+import { EditSaleDialog } from './EditSaleDialog';
 import { NotaCell } from '@/components/admin/NotaCell';
 
 interface VentasContentProps {
@@ -62,6 +63,7 @@ const chipActiveStyle = (value: StatusFilter): React.CSSProperties => ({
 
 export function VentasContent({ sales, clients, products }: VentasContentProps) {
   const [showNewSale, setShowNewSale] = useState(false);
+  const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const totalRevenue = sales.reduce((acc, s) => acc + Number(s.total), 0);
@@ -141,11 +143,28 @@ export function VentasContent({ sales, clients, products }: VentasContentProps) 
             key: 'notes', header: 'Notas',
             render: (s) => <NotaCell text={s.notes} />,
           },
+          {
+            key: '_actions', header: '',
+            render: (s) => (
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditingSale(s); }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                title="Editar venta"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            ),
+          },
         ]}
       />
 
       {showNewSale && (
         <NewSaleDialog clients={clients} products={products} onClose={() => setShowNewSale(false)} />
+      )}
+
+      {editingSale && (
+        <EditSaleDialog sale={editingSale} onClose={() => setEditingSale(null)} />
       )}
     </>
   );
