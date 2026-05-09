@@ -9,16 +9,50 @@ export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(publishedOnly?: boolean) {
-    return this.prisma.product.findMany({
+    const products = await this.prisma.product.findMany({
       where: publishedOnly ? { isPublished: true } : undefined,
+      include: {
+        restocks: { select: { quantity: true } },
+        _count: { select: { sales: true } },
+      },
       orderBy: { createdAt: 'desc' },
+    });
+
+    return products.map((p) => {
+      const totalRestocked =
+        p.restocks?.reduce((sum, r) => sum + r.quantity, 0) ?? 0;
+      const totalSold = p._count?.sales ?? 0;
+      const rest = { ...p } as any;
+      delete rest.restocks;
+      delete rest._count;
+      return {
+        ...rest,
+        stock: totalRestocked - totalSold,
+      };
     });
   }
 
   async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product) throw new NotFoundException('Producto no encontrado');
-    return product;
+    const p = await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        restocks: { select: { quantity: true } },
+        _count: { select: { sales: true } },
+      },
+    });
+    if (!p) throw new NotFoundException('Producto no encontrado');
+
+    const totalRestocked =
+      p.restocks?.reduce((sum, r) => sum + r.quantity, 0) ?? 0;
+    const totalSold = p._count?.sales ?? 0;
+    const rest = { ...p } as any;
+    delete rest.restocks;
+    delete rest._count;
+
+    return {
+      ...rest,
+      stock: totalRestocked - totalSold,
+    };
   }
 
   async create(dto: CreateProductDto) {

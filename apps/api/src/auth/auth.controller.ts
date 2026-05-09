@@ -31,7 +31,7 @@ export class AuthController {
     );
 
     this.setCookies(res, accessToken, refreshToken);
-    return { message: 'Login exitoso' };
+    return { message: 'Login exitoso', accessToken, refreshToken };
   }
 
   @Post('refresh')
@@ -50,7 +50,7 @@ export class AuthController {
 
     const tokens = await this.authService.refresh(refreshToken);
     this.setCookies(res, tokens.accessToken, tokens.refreshToken);
-    return { message: 'Tokens renovados' };
+    return { message: 'Tokens renovados', ...tokens };
   }
 
   @UseGuards(JwtAuthGuard)

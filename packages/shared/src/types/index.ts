@@ -25,6 +25,8 @@ export interface Sale {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  client?: Client;
+  product?: Product;
 }
 
 export interface SaleAdmin extends Sale {
@@ -66,6 +68,7 @@ export interface Product {
   imageUrl?: string;
   salePrice: number;
   minStock: number;
+  stock?: number;
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;

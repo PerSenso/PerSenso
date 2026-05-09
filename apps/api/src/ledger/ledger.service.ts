@@ -17,10 +17,9 @@ export class LedgerService {
         GROUP BY "paymentMethod"
       `,
       this.prisma.$queryRaw<{ total: string }[]>`
-        SELECT
-          COALESCE(SUM(r.quantity * r."baseUnitCost" + o."shippingCost" + o."marketingCost"), 0) AS total
-        FROM "Restock" r
-        JOIN "Order" o ON o.id = r."orderId"
+        SELECT 
+          (SELECT COALESCE(SUM(quantity * "baseUnitCost"), 0) FROM "Restock") +
+          (SELECT COALESCE(SUM("shippingCost" + "marketingCost"), 0) FROM "Order") AS total
       `,
       this.prisma.cashMovement.findMany({ orderBy: { date: 'desc' } }),
     ]);

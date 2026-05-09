@@ -43,12 +43,12 @@ export function useProductFilters<T extends FilterableProduct>(products: T[]) {
 
   const filtered = useMemo(() => {
     return products
-      .filter((p) => selectedGenders.length === 0 || selectedGenders.includes(p.gender))
+      .filter((p) => selectedGenders.length === 0 || selectedGenders.map(g => g.toUpperCase()).includes(p.gender?.toUpperCase() || ""))
       .filter((p) => selectedBrand === "Todas" || p.brand === selectedBrand)
       .filter((p) => selectedConcentration === "Todas" || p.concentration === selectedConcentration)
       .filter((p) => {
         if (!searchQuery.trim()) return true;
-        return fuzzyMatch(p.name, searchQuery) || fuzzyMatch(p.brand, searchQuery);
+        return fuzzyMatch(p.name || "", searchQuery) || fuzzyMatch(p.brand || "", searchQuery);
       })
       .sort((a, b) => {
         if (a.stock <= 0 && b.stock > 0) return 1;

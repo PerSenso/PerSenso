@@ -10,6 +10,25 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/admin-login",
+        destination: "/admin/login",
+        permanent: true,
+      },
+      {
+        source: "/admin-blindada.html",
+        destination: "/admin/login",
+        permanent: true,
+      },
+      {
+        source: "/admin",
+        destination: "/admin/dashboard",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
     return [

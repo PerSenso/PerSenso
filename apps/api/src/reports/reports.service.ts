@@ -46,10 +46,9 @@ export class ReportsService {
           LIMIT 10
         `,
         this.prisma.$queryRaw<{ total_debt: string }[]>`
-          SELECT
-            COALESCE(SUM(s.total), 0) - COALESCE(SUM(p.amount), 0) AS total_debt
-          FROM "Sale" s
-          LEFT JOIN "Payment" p ON p."saleId" = s.id
+          SELECT 
+            (SELECT COALESCE(SUM(total), 0) FROM "Sale") - 
+            (SELECT COALESCE(SUM(amount), 0) FROM "Payment") AS total_debt
         `,
         this.prisma.$queryRaw<{ name: string; avg_margin_pct: string }[]>`
           SELECT

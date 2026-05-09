@@ -1,0 +1,65 @@
+'use client';
+
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminStatCard } from '@/components/admin/AdminStatCard';
+import { AdminDataTable } from '@/components/admin/AdminDataTable';
+import type { ReportsSummary } from '@persenso/shared';
+import { BarChart3, DollarSign } from 'lucide-react';
+
+interface ReportesContentProps {
+  reports: ReportsSummary;
+}
+
+function formatCurrency(amount: number): string {
+  return `$${Number(amount).toFixed(2)}`;
+}
+
+export function ReportesContent({ reports }: ReportesContentProps) {
+  return (
+    <>
+      <AdminPageHeader title="Reportes" subtitle="Métricas financieras del negocio" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <AdminStatCard title="Deuda Total Clientes" value={formatCurrency(reports.totalDebt)} icon={DollarSign} color="red" />
+        <AdminStatCard title="Productos Analizados" value={reports.topProducts.length} icon={BarChart3} color="gold" />
+      </div>
+
+      {/* Sales by Month */}
+      <div className="card-persenso p-6 mb-8">
+        <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>Ventas por Mes</h2>
+        {reports.salesByMonth.length === 0 ? (
+          <p className="text-sm text-center py-4" style={{ color: 'var(--ps-text-muted)' }}>Sin datos</p>
+        ) : (
+          <div className="space-y-3">
+            {reports.salesByMonth.map((m) => (
+              <div key={m.month} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--ps-border)' }}>
+                <span className="text-sm font-medium" style={{ color: 'var(--ps-text)' }}>
+                  {new Date(m.month).toLocaleDateString('es-VE', { month: 'long', year: 'numeric' })}
+                </span>
+                <div className="flex gap-6 text-sm">
+                  <span style={{ color: 'var(--ps-text-muted)' }}>{m.sales_count} ventas</span>
+                  <span style={{ color: 'var(--ps-gold)' }} className="font-semibold">{formatCurrency(m.revenue)}</span>
+                  <span style={{ color: 'var(--ps-green)' }}>{formatCurrency(m.profit)} profit</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Top Products */}
+      <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>Top Productos</h2>
+      <AdminDataTable
+        data={reports.topProducts}
+        keyExtractor={(p) => p.name}
+        emptyMessage="Sin datos de productos"
+        columns={[
+          { key: 'name', header: 'Producto', sortable: true, render: (p) => <span className="font-medium">{p.name}</span> },
+          { key: 'sales_count', header: 'Ventas', sortable: true, align: 'center' },
+          { key: 'revenue', header: 'Ingresos', sortable: true, align: 'right', render: (p) => <span style={{ color: 'var(--ps-gold)' }}>{formatCurrency(p.revenue)}</span> },
+          { key: 'avg_margin', header: 'Margen %', sortable: true, align: 'right', render: (p) => <span style={{ color: 'var(--ps-green)' }}>{Number(p.avg_margin).toFixed(1)}%</span> },
+        ]}
+      />
+    </>
+  );
+}
