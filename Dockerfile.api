@@ -1,0 +1,82 @@
+# ─── Build ────────────────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Copy workspace manifests first for better layer caching
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json   ./packages/shared/
+COPY apps/api/package.json          ./apps/api/
+
+# Install ALL deps (devDeps required for @nestjs/cli and tsc)
+RUN npm ci
+
+# Copy sources
+COPY tsconfig.base.json             ./
+COPY packages/shared/               ./packages/shared/
+COPY apps/api/                      ./apps/api/
+
+# 1. Compile @persenso/shared to JS and patch its package.json to point to dist/
+#    Without this, nest build sees main="./src/index.ts", expands rootDir, and
+#    outputs to dist/apps/api/src/main.js instead of dist/main.js
+RUN cd packages/shared && npx tsc
+RUN node -e " \
+  const fs = require('fs'); \
+  const p  = JSON.parse(fs.readFileSync('./packages/shared/package.json', 'utf8')); \
+  p.main  = './dist/index.js'; \
+  p.types = './dist/index.d.ts'; \
+  fs.writeFileSync('./packages/shared/package.json', JSON.stringify(p, null, 2));"
+
+# 2. Build API — patch tsconfig to map @persenso/shared to compiled dist
+#    declarations so TypeScript uses .d.ts instead of .ts source files.
+#    rootDir is intentionally NOT set: scripts/ and generated/ sit outside src/,
+#    so TypeScript infers rootDir=apps/api/ and outputs to dist/src/main.js.
+WORKDIR /app/apps/api
+RUN node -e " \
+  const fs = require('fs'); \
+  const t = JSON.parse(fs.readFileSync('./tsconfig.json', 'utf8')); \
+  t.compilerOptions.paths = { '@persenso/shared': ['../../packages/shared/dist/index'] }; \
+  fs.writeFileSync('./tsconfig.json', JSON.stringify(t, null, 2));"
+RUN npx prisma generate
+RUN npx nest build
+RUN ls dist/src/main.js
+
+WORKDIR /app
+
+# ─── Runtime ──────────────────────────────────────────────────────────────────
+FROM node:22-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy manifests for prod install
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json   ./packages/shared/
+COPY apps/api/package.json          ./apps/api/
+
+# Remove prepare script (calls husky which is a devDep — not available here)
+RUN node -e "const fs=require('fs'),p=JSON.parse(fs.readFileSync('package.json','utf8'));delete p.scripts.prepare;fs.writeFileSync('package.json',JSON.stringify(p,null,2));"
+
+RUN npm ci --omit=dev
+
+# Copy compiled @persenso/shared and patch package.json to point to dist/
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+RUN node -e " \
+  const fs = require('fs'); \
+  const p  = JSON.parse(fs.readFileSync('./packages/shared/package.json', 'utf8')); \
+  p.main  = './dist/index.js'; \
+  p.types = './dist/index.d.ts'; \
+  fs.writeFileSync('./packages/shared/package.json', JSON.stringify(p, null, 2));"
+
+# Copy compiled API artifacts
+COPY --from=builder /app/apps/api/dist      ./apps/api/dist
+COPY --from=builder /app/apps/api/generated ./apps/api/generated
+COPY --from=builder /app/apps/api/prisma    ./apps/api/prisma
+COPY apps/api/prisma.config.ts              ./apps/api/prisma.config.ts
+
+WORKDIR /app/apps/api
+
+EXPOSE 3001
+
+CMD ["npm", "run", "start:prod"]
