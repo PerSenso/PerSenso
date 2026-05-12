@@ -27,6 +27,9 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
   });
 
   const selectedProduct = products.find((p) => p.id === form.productId);
+  const sortedProducts = [...products].sort(
+    (a, b) => Number((b.stock ?? 0) > 0) - Number((a.stock ?? 0) > 0),
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,13 +57,16 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
         body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error('Error al crear la venta');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { message?: string }).message ?? 'Error al crear la venta');
+      }
 
       toast.success('Venta creada exitosamente');
       router.refresh();
       onClose();
-    } catch {
-      toast.error('Error al crear la venta');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al crear la venta');
     } finally {
       setLoading(false);
     }
@@ -127,11 +133,14 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
               style={{ background: 'var(--ps-input-bg)', border: '1px solid var(--ps-input-border)', color: 'var(--ps-input-text)' }}
             >
               <option value="">Seleccionar producto</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} {p.brand ? `— ${p.brand}` : ''} (${Number(p.salePrice).toFixed(2)}) [Stock: {p.stock ?? 0}]
-                  </option>
-                ))}
+                {sortedProducts.map((p) => {
+                  const inStock = (p.stock ?? 0) > 0;
+                  return (
+                    <option key={p.id} value={p.id} disabled={!inStock}>
+                      {p.name} {p.brand ? `— ${p.brand}` : ''} (${Number(p.salePrice).toFixed(2)}) [{inStock ? `Stock: ${p.stock}` : 'Sin stock'}]
+                    </option>
+                  );
+                })}
             </select>
             {selectedProduct && (
               <p className="text-xs mt-1" style={{ color: 'var(--ps-text-muted)' }}>

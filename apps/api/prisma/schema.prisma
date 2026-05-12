@@ -58,6 +58,11 @@ enum Gender {
   UNISEX
 }
 
+enum SaleStatus {
+  ACTIVA
+  ANULADA
+}
+
 model Supplier {
   id        String   @id @default(uuid())
   name      String
@@ -124,6 +129,7 @@ model Sale {
   product         Product   @relation(fields: [productId], references: [id])
   restockSourceId String?
   restockSource   Restock?  @relation("RestockSource", fields: [restockSourceId], references: [id])
+  status          SaleStatus @default(ACTIVA)
   total           Decimal   @db.Decimal(10, 2)
   unitCostAtSale  Decimal?  @db.Decimal(10, 2)
   profitAtSale    Decimal?  @db.Decimal(10, 2)

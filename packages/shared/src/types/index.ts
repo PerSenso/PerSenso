@@ -1,4 +1,5 @@
 export type Role = 'OWNER' | 'ADMIN' | 'VIEWER';
+export type SaleStatus = 'ACTIVA' | 'ANULADA';
 export type Gender = 'HOMBRE' | 'MUJER' | 'UNISEX';
 
 export interface Client {
@@ -21,6 +22,7 @@ export interface Sale {
   clientId: string;
   productId: string;
   restockSourceId?: string;
+  status: SaleStatus;
   total: number;
   unitCostAtSale?: number;
   profitAtSale?: number;

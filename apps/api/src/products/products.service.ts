@@ -13,7 +13,7 @@ export class ProductsService {
       where: publishedOnly ? { isPublished: true } : undefined,
       include: {
         restocks: { select: { quantity: true } },
-        _count: { select: { sales: true } },
+        _count: { select: { sales: { where: { status: 'ACTIVA' } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -37,7 +37,7 @@ export class ProductsService {
       where: { id },
       include: {
         restocks: { select: { quantity: true } },
-        _count: { select: { sales: true } },
+        _count: { select: { sales: { where: { status: 'ACTIVA' } } } },
       },
     });
     if (!p) throw new NotFoundException('Producto no encontrado');

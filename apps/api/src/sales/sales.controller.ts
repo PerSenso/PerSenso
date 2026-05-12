@@ -42,6 +42,11 @@ export class SalesController {
     return this.salesService.create(dto);
   }
 
+  @Patch(':id/anular')
+  anular(@Param('id', ParseUUIDPipe) id: string) {
+    return this.salesService.anular(id);
+  }
+
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSaleDto) {
     return this.salesService.update(id, dto);

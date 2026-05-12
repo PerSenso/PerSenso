@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
@@ -54,8 +58,37 @@ export class SalesService {
     return { total, paid, pending, status };
   }
 
+  async anular(id: string) {
+    const sale = await this.findOne(id);
+    if (sale.status === 'ANULADA') {
+      throw new BadRequestException('La venta ya está anulada');
+    }
+    return this.prisma.sale.update({
+      where: { id },
+      data: { status: 'ANULADA' },
+      include: this.saleInclude,
+    });
+  }
+
   async create(dto: CreateSaleDto) {
     return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: dto.productId },
+        include: {
+          restocks: { select: { quantity: true } },
+          _count: { select: { sales: { where: { status: 'ACTIVA' } } } },
+        },
+      });
+      if (!product) throw new NotFoundException('Producto no encontrado');
+      const totalRestocked = product.restocks.reduce(
+        (s, r) => s + r.quantity,
+        0,
+      );
+      const totalSold = product._count.sales;
+      if (totalRestocked - totalSold <= 0) {
+        throw new BadRequestException('Stock insuficiente');
+      }
+
       const restock = await tx.restock.findFirst({
         where: { productId: dto.productId, sales: { none: {} } },
         orderBy: { createdAt: 'asc' },
