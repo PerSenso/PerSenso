@@ -44,9 +44,25 @@ function normalizeGender(val: unknown): 'HOMBRE' | 'MUJER' | 'UNISEX' {
   return 'UNISEX';
 }
 
+async function clearDatabase() {
+  console.log('🗑️  Limpiando base de datos...');
+  await prisma.payment.deleteMany();
+  await prisma.sale.deleteMany();
+  await prisma.cashMovement.deleteMany();
+  await prisma.fundingEntry.deleteMany();
+  await prisma.restock.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.client.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.supplier.deleteMany();
+  console.log('✅ Tablas limpias\n');
+}
+
 async function main() {
   console.log('🚀 Iniciando migración Firebase → PostgreSQL');
   console.log(`   Export: ${EXPORT_PATH}`);
+
+  await clearDatabase();
 
   const raw = JSON.parse(fs.readFileSync(EXPORT_PATH, 'utf8'));
   const report = { created: 0, skipped: 0, errors: [] as string[] };
