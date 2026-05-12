@@ -52,7 +52,6 @@ export class ClientsController {
     return this.clientsService.update(id, dto);
   }
 
-  @Roles('OWNER')
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.clientsService.remove(id);

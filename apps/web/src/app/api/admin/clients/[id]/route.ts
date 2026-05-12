@@ -23,3 +23,26 @@ export async function PATCH(
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const token = cookieStore.get('access_token')?.value;
+
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const res = await fetch(`${API_URL}/clients/${id}`, {
+    method: 'DELETE',
+    headers: { Cookie: `access_token=${token}` },
+  });
+
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return new NextResponse(null, { status: res.status });
+  }
+
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -86,6 +90,15 @@ export class ClientsService {
 
   async remove(id: string) {
     await this.findOne(id);
+    const [salesCount, paymentsCount] = await Promise.all([
+      this.prisma.sale.count({ where: { clientId: id } }),
+      this.prisma.payment.count({ where: { clientId: id } }),
+    ]);
+    if (salesCount > 0 || paymentsCount > 0) {
+      throw new BadRequestException(
+        `No se puede eliminar: el cliente tiene historial de ventas o pagos registrados`,
+      );
+    }
     return this.prisma.client.delete({ where: { id } });
   }
 }

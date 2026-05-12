@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
+import { AdminModal } from '@/components/admin/AdminModal';
 import type { ClientWithDebt } from '@persenso/shared';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { NewClienteDialog } from './NewClienteDialog';
 import { EditClienteDialog } from './EditClienteDialog';
 import { NotaCell } from '@/components/admin/NotaCell';
@@ -20,8 +23,30 @@ function formatDebt(debt: number) {
 }
 
 export function ClientesContent({ clients }: ClientesContentProps) {
+  const router = useRouter();
   const [showNew, setShowNew] = useState(false);
   const [editingClient, setEditingClient] = useState<ClientWithDebt | null>(null);
+  const [deletingClient, setDeletingClient] = useState<ClientWithDebt | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deletingClient) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/admin/clients/${deletingClient.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { message?: string }).message ?? 'Error al eliminar');
+      }
+      toast.success('Cliente eliminado');
+      router.refresh();
+      setDeletingClient(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar el cliente');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   return (
     <>
@@ -38,6 +63,34 @@ export function ClientesContent({ clients }: ClientesContentProps) {
       />
       {showNew && <NewClienteDialog onClose={() => setShowNew(false)} />}
       {editingClient && <EditClienteDialog client={editingClient} onClose={() => setEditingClient(null)} />}
+
+      {deletingClient && (
+        <AdminModal title="Eliminar Cliente" onClose={() => setDeletingClient(null)}>
+          <p className="text-sm mb-6" style={{ color: 'var(--ps-text-soft)' }}>
+            ¿Eliminar a <strong style={{ color: 'var(--ps-text)' }}>{deletingClient.name}</strong>?
+            Esta acción no se puede deshacer.
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setDeletingClient(null)}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'var(--ps-surface)', color: 'var(--ps-text-muted)', border: '1px solid var(--ps-border)' }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={deleteLoading}
+              onClick={handleDelete}
+              className="flex-1 py-2.5 rounded-lg text-sm font-bold uppercase tracking-widest disabled:opacity-50"
+              style={{ background: 'var(--ps-red)', color: '#fff' }}
+            >
+              {deleteLoading ? 'Eliminando…' : 'Eliminar'}
+            </button>
+          </div>
+        </AdminModal>
+      )}
 
       <AdminDataTable
         data={clients}
@@ -76,14 +129,24 @@ export function ClientesContent({ clients }: ClientesContentProps) {
           {
             key: '_actions', header: '',
             render: (c) => (
-              <button
-                onClick={(e) => { e.stopPropagation(); setEditingClient(c); }}
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
-                title="Editar cliente"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingClient(c); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                  title="Editar cliente"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeletingClient(c); }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: 'var(--ps-red)', background: 'var(--ps-surface)' }}
+                  title="Eliminar cliente"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ),
           },
         ]}
