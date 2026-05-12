@@ -16,12 +16,6 @@ function buildUpdatedCookieHeader(request: NextRequest, newAccessToken: string):
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (pathname.startsWith('/admin/login')) {
-    return NextResponse.next();
-  }
-
   const accessToken = request.cookies.get('access_token')?.value;
   const refreshToken = request.cookies.get('refresh_token')?.value;
 
@@ -54,14 +48,11 @@ export async function middleware(request: NextRequest) {
 
     const isProduction = process.env.NODE_ENV === 'production';
 
-    // Actualizar el header Cookie del request para que los Server Components
-    // lean el nuevo access_token en esta misma request
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('cookie', buildUpdatedCookieHeader(request, newAccessToken));
 
     const response = NextResponse.next({ request: { headers: requestHeaders } });
 
-    // Persistir las nuevas cookies en el browser
     response.cookies.set('access_token', newAccessToken, {
       httpOnly: true,
       secure: isProduction,
@@ -83,6 +74,7 @@ export async function middleware(request: NextRequest) {
   }
 }
 
+// El matcher excluye /admin/login para evitar redirect loops
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/((?!login).+)'],
 };
