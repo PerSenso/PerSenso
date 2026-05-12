@@ -13,6 +13,27 @@ export class PaymentsService {
     });
   }
 
+  async findSalesWithDebt() {
+    const sales = await this.prisma.sale.findMany({
+      where: { status: 'ACTIVA' },
+      include: {
+        client: { select: { id: true, name: true } },
+        product: { select: { id: true, name: true } },
+        payments: { orderBy: { date: 'asc' } },
+      },
+      orderBy: { date: 'desc' },
+    });
+
+    return sales
+      .map((s) => {
+        const total = Number(s.total);
+        const paid = s.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+        const pending = Math.max(0, total - paid);
+        return { ...s, total, paid, pending };
+      })
+      .filter((s) => s.pending > 0);
+  }
+
   async findOne(id: string) {
     const payment = await this.prisma.payment.findUnique({ where: { id } });
     if (!payment) throw new NotFoundException('Pago no encontrado');

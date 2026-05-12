@@ -29,6 +29,11 @@ export class PaymentsController {
     private storageService: StorageService,
   ) {}
 
+  @Get('sales-with-debt')
+  findSalesWithDebt() {
+    return this.paymentsService.findSalesWithDebt();
+  }
+
   @Get()
   findBySale(@Query('saleId') saleId: string) {
     return this.paymentsService.findBySale(saleId);

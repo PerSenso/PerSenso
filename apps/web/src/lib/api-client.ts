@@ -104,6 +104,8 @@ export const api = {
       apiFetch<import('@persenso/shared').Payment[]>(
         saleId ? `/payments?saleId=${saleId}` : '/payments',
       ),
+    salesWithDebt: () =>
+      apiFetch<import('@persenso/shared').SaleWithDebt[]>('/payments/sales-with-debt'),
     create: (data: import('@persenso/shared').CreatePaymentInput) =>
       apiFetch<import('@persenso/shared').Payment>('/payments', {
         method: 'POST',

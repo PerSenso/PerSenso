@@ -17,6 +17,18 @@ export interface ClientWithDebt extends Client {
   debt: number;
 }
 
+export interface SaleWithDebt {
+  id: string;
+  date: string;
+  total: number;
+  paid: number;
+  pending: number;
+  notes?: string;
+  client: { id: string; name: string };
+  product: { id: string; name: string };
+  payments: Payment[];
+}
+
 export interface Sale {
   id: string;
   clientId: string;
