@@ -182,6 +182,32 @@ export interface ReportsSummary {
   marginByProduct: { name: string; avg_margin_pct: number }[];
 }
 
+// ── Dashboard ────────────────────────────────────────────────────────────────
+
+export interface DashboardDebt {
+  id: string;
+  clientName: string;
+  productName: string;
+  date: string;
+  total: number;
+  paid: number;
+  pending: number;
+  payments: Payment[];
+}
+
+export interface DashboardSalesStatus {
+  paid: { count: number; total: number };
+  partial: { count: number; total: number };
+  pending: { count: number; total: number };
+}
+
+export interface DashboardTopClient {
+  clientId: string;
+  name: string;
+  totalPaid: number;
+  salesCount: number;
+}
+
 // ── Trazabilidad ─────────────────────────────────────────────────────────────
 
 export interface ClientWithSales extends Client {

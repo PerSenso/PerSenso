@@ -193,4 +193,35 @@ export const api = {
     summary: () =>
       apiFetch<import('@persenso/shared').ReportsSummary>('/reports/summary'),
   },
+
+  // Dashboard
+  dashboard: {
+    debts: (startDate?: string, endDate?: string) => {
+      const params = new URLSearchParams();
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+      const qs = params.toString();
+      return apiFetch<import('@persenso/shared').DashboardDebt[]>(
+        `/dashboard/debts${qs ? `?${qs}` : ''}`,
+      );
+    },
+    salesStatus: (startDate?: string, endDate?: string) => {
+      const params = new URLSearchParams();
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+      const qs = params.toString();
+      return apiFetch<import('@persenso/shared').DashboardSalesStatus>(
+        `/dashboard/sales-status${qs ? `?${qs}` : ''}`,
+      );
+    },
+    topClients: (startDate?: string, endDate?: string) => {
+      const params = new URLSearchParams();
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+      const qs = params.toString();
+      return apiFetch<import('@persenso/shared').DashboardTopClient[]>(
+        `/dashboard/top-clients${qs ? `?${qs}` : ''}`,
+      );
+    },
+  },
 };

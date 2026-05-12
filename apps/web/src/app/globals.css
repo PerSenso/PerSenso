@@ -231,6 +231,14 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   DATE INPUT — fuerza popup oscuro en todos los temas para
+   garantizar contraste visible del calendario nativo del browser
+   ═══════════════════════════════════════════════════════════════ */
+input[type="date"] {
+  color-scheme: dark;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    SCROLLBAR
    ═══════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar { width: 5px; }

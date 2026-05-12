@@ -15,6 +15,7 @@ import { OrdersModule } from './orders/orders.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { ReportsModule } from './reports/reports.module';
 import { TraceModule } from './trace/trace.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TraceModule } from './trace/trace.module';
     LedgerModule,
     ReportsModule,
     TraceModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
