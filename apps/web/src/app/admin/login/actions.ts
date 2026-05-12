@@ -54,6 +54,23 @@ export async function login(formData: FormData) {
 
 export async function logout() {
   const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  if (accessToken) {
+    const API_URL = process.env.API_URL || 'http://localhost:3001';
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Cookie: `access_token=${accessToken}`,
+        },
+      });
+    } catch {
+      // Si el API falla, se procede igual con el logout local
+    }
+  }
+
   cookieStore.delete('access_token');
   cookieStore.delete('refresh_token');
   redirect('/admin/login');

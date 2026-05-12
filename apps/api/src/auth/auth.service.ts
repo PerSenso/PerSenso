@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,8 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user.id, user.role);
 
-    const hash = await bcrypt.hash(tokens.refreshToken, 10);
+    const sig = tokens.refreshToken.split('.')[2];
+    const hash = await bcrypt.hash(sig, 10);
     await this.prisma.refreshToken.upsert({
       where: { userId: user.id },
       update: { token: hash },
@@ -48,12 +50,14 @@ export class AuthService {
     });
     if (!stored) throw new ForbiddenException('Sesión inválida');
 
-    const tokenMatches = await bcrypt.compare(refreshToken, stored.token);
+    const incomingSig = refreshToken.split('.')[2];
+    const tokenMatches = await bcrypt.compare(incomingSig, stored.token);
     if (!tokenMatches) throw new ForbiddenException('Sesión inválida');
 
     const tokens = await this.generateTokens(payload.sub, payload.role);
 
-    const hash = await bcrypt.hash(tokens.refreshToken, 10);
+    const newSig = tokens.refreshToken.split('.')[2];
+    const hash = await bcrypt.hash(newSig, 10);
     await this.prisma.refreshToken.update({
       where: { userId: payload.sub },
       data: { token: hash },
@@ -69,15 +73,15 @@ export class AuthService {
   private async generateTokens(userId: string, role: string) {
     const payload = { sub: userId, role };
 
-    const accessToken = this.jwt.sign(payload, {
-      secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: '15m',
-    });
+    const accessToken = this.jwt.sign(
+      { ...payload, jti: randomUUID() },
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
+    );
 
-    const refreshToken = this.jwt.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: '7d',
-    });
+    const refreshToken = this.jwt.sign(
+      { ...payload, jti: randomUUID() },
+      { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
+    );
 
     return { accessToken, refreshToken };
   }
