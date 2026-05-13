@@ -10,6 +10,7 @@ import type { ClientWithDebt } from '@persenso/shared';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { NewClienteDialog } from './NewClienteDialog';
 import { EditClienteDialog } from './EditClienteDialog';
+import { ClienteDetailModal } from './ClienteDetailModal';
 import { NotaCell } from '@/components/admin/NotaCell';
 import { IdBadge } from '@/components/admin/IdBadge';
 
@@ -27,6 +28,7 @@ export function ClientesContent({ clients }: ClientesContentProps) {
   const [showNew, setShowNew] = useState(false);
   const [editingClient, setEditingClient] = useState<ClientWithDebt | null>(null);
   const [deletingClient, setDeletingClient] = useState<ClientWithDebt | null>(null);
+  const [detailClient, setDetailClient] = useState<ClientWithDebt | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const handleDelete = async () => {
@@ -63,6 +65,7 @@ export function ClientesContent({ clients }: ClientesContentProps) {
       />
       {showNew && <NewClienteDialog onClose={() => setShowNew(false)} />}
       {editingClient && <EditClienteDialog client={editingClient} onClose={() => setEditingClient(null)} />}
+      {detailClient && <ClienteDetailModal client={detailClient} onClose={() => setDetailClient(null)} />}
 
       {deletingClient && (
         <AdminModal title="Eliminar Cliente" onClose={() => setDeletingClient(null)}>
@@ -95,6 +98,7 @@ export function ClientesContent({ clients }: ClientesContentProps) {
       <AdminDataTable
         data={clients}
         keyExtractor={(c) => c.id}
+        onRowClick={(c) => setDetailClient(c)}
         emptyMessage="No hay clientes registrados"
         searchable
         searchPlaceholder="Buscar por nombre, cédula o teléfono…"

@@ -37,6 +37,11 @@ export class ClientsController {
     return this.clientsService.findOne(id);
   }
 
+  @Get(':id/detail')
+  findOneWithSales(@Param('id', ParseUUIDPipe) id: string) {
+    return this.clientsService.findOneWithSales(id);
+  }
+
   @Get(':id/debt')
   getDebt(@Param('id', ParseUUIDPipe) id: string) {
     return this.clientsService.getDebt(id);

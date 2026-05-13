@@ -67,6 +67,34 @@ export class ClientsService {
     return client;
   }
 
+  async findOneWithSales(id: string) {
+    const client = await this.prisma.client.findUnique({
+      where: { id },
+      include: {
+        sales: {
+          include: {
+            product: { select: { id: true, name: true, brand: true } },
+            payments: { orderBy: { date: 'asc' } },
+          },
+          orderBy: { date: 'desc' },
+        },
+      },
+    });
+    if (!client) throw new NotFoundException('Cliente no encontrado');
+
+    const totalSpent = client.sales.reduce(
+      (s, sale) => s + Number(sale.total),
+      0,
+    );
+    const totalPaid = client.sales.reduce(
+      (s, sale) =>
+        s + sale.payments.reduce((ps, p) => ps + Number(p.amount), 0),
+      0,
+    );
+
+    return { ...client, totalSpent, totalPaid, debt: totalSpent - totalPaid };
+  }
+
   async getDebt(clientId: string) {
     await this.findOne(clientId);
     const result = await this.prisma.$queryRaw<{ debt: string }[]>`
