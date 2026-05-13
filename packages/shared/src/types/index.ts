@@ -184,11 +184,28 @@ export interface TopProduct {
   avg_margin: number;
 }
 
+export interface TopClientReport {
+  clientId: string;
+  name: string;
+  totalSpent: number;
+  salesCount: number;
+}
+
+export interface PaymentMethodBreakdown {
+  method: string;
+  total: number;
+  count: number;
+}
+
 export interface ReportsSummary {
   salesByMonth: SalesByMonth[];
   topProducts: TopProduct[];
   totalDebt: number;
+  totalRevenue: number;
+  totalCollected: number;
   marginByProduct: { name: string; avg_margin_pct: number }[];
+  topClients: TopClientReport[];
+  paymentsByMethod: PaymentMethodBreakdown[];
 }
 
 // ── Dashboard ────────────────────────────────────────────────────────────────

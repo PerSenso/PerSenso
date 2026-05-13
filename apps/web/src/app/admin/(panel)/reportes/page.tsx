@@ -2,7 +2,10 @@ import { redirect } from 'next/navigation';
 import { api, ApiError } from '@/lib/api-client';
 import { ReportesContent } from './ReportesContent';
 
-const EMPTY_REPORTS = { salesByMonth: [], topProducts: [], totalDebt: 0, marginByProduct: [] };
+const EMPTY_REPORTS = {
+  salesByMonth: [], topProducts: [], totalDebt: 0, totalRevenue: 0, totalCollected: 0,
+  marginByProduct: [], topClients: [], paymentsByMethod: [],
+};
 
 export default async function ReportesPage() {
   try {

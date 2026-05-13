@@ -30,7 +30,7 @@ export class ReportsService {
       ? Prisma.sql`JOIN "Sale" sf ON sf.id = p."saleId" WHERE sf.date >= ${start} AND sf.date <= ${endEod}`
       : Prisma.sql``;
 
-    const [salesByMonth, topProducts, debtRows, marginByProduct] =
+    const [salesByMonth, topProducts, totalsRow, marginByProduct, topClients, paymentsByMethod] =
       await Promise.all([
         this.prisma.$queryRaw<
           {
@@ -69,12 +69,11 @@ export class ReportsService {
           ${sDateWhere}
           GROUP BY p.id, p.name
           ORDER BY SUM(s.total) DESC
-          LIMIT 10
         `,
-        this.prisma.$queryRaw<{ total_debt: string }[]>`
+        this.prisma.$queryRaw<{ total_revenue: string; total_collected: string }[]>`
           SELECT
-            (SELECT COALESCE(SUM(total), 0) FROM "Sale" ${debtSaleFilter}) -
-            (SELECT COALESCE(SUM(p.amount), 0) FROM "Payment" p ${debtPayFilter}) AS total_debt
+            (SELECT COALESCE(SUM(total), 0) FROM "Sale" ${debtSaleFilter}) AS total_revenue,
+            (SELECT COALESCE(SUM(p.amount), 0) FROM "Payment" p ${debtPayFilter}) AS total_collected
         `,
         this.prisma.$queryRaw<{ name: string; avg_margin_pct: string }[]>`
           SELECT
@@ -86,7 +85,35 @@ export class ReportsService {
           GROUP BY p.id, p.name
           ORDER BY AVG(s."marginPctAtSale") DESC
         `,
+        this.prisma.$queryRaw<
+          { clientId: string; name: string; total_spent: string; sales_count: string }[]
+        >`
+          SELECT
+            c.id AS "clientId",
+            c.name,
+            SUM(s.total) AS total_spent,
+            COUNT(s.id) AS sales_count
+          FROM "Sale" s
+          JOIN "Client" c ON c.id = s."clientId"
+          ${sDateWhere}
+          GROUP BY c.id, c.name
+          ORDER BY SUM(s.total) DESC
+          LIMIT 10
+        `,
+        this.prisma.$queryRaw<{ method: string; total: string; count: string }[]>`
+          SELECT
+            p."paymentMethod" AS method,
+            SUM(p.amount) AS total,
+            COUNT(p.id) AS count
+          FROM "Payment" p
+          JOIN "Sale" s ON s.id = p."saleId" ${sDateAnd}
+          GROUP BY p."paymentMethod"
+          ORDER BY SUM(p.amount) DESC
+        `,
       ]);
+
+    const totalRevenue = Number(totalsRow[0]?.total_revenue ?? 0);
+    const totalCollected = Number(totalsRow[0]?.total_collected ?? 0);
 
     return {
       salesByMonth: salesByMonth.map((r) => ({
@@ -101,10 +128,23 @@ export class ReportsService {
         revenue: Number(r.revenue),
         avg_margin: Number(r.avg_margin ?? 0),
       })),
-      totalDebt: Number(debtRows[0]?.total_debt ?? 0),
+      totalDebt: totalRevenue - totalCollected,
+      totalRevenue,
+      totalCollected,
       marginByProduct: marginByProduct.map((r) => ({
         name: r.name,
         avg_margin_pct: Number(r.avg_margin_pct),
+      })),
+      topClients: topClients.map((r) => ({
+        clientId: r.clientId,
+        name: r.name,
+        totalSpent: Number(r.total_spent),
+        salesCount: Number(r.sales_count),
+      })),
+      paymentsByMethod: paymentsByMethod.map((r) => ({
+        method: r.method,
+        total: Number(r.total),
+        count: Number(r.count),
       })),
     };
   }
