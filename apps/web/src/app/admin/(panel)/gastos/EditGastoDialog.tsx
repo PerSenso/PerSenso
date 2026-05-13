@@ -3,19 +3,28 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
+import type { CashMovement } from '@persenso/shared';
 
 interface Props {
+  movement: CashMovement;
   onClose: () => void;
 }
 
 const METHODS = ['efectivo', 'pago_movil', 'transferencia', 'zelle', 'binance'];
 
-export function NewGastoDialog({ onClose }: Props) {
+export function EditGastoDialog({ movement, onClose }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const today = new Date().toISOString().split('T')[0];
-  const [form, setForm] = useState({ source: '', method: 'efectivo', amount: '', date: today, notes: '', owner: '' });
+  const [form, setForm] = useState({
+    source: movement.source,
+    method: movement.method,
+    amount: String(Number(movement.amount)),
+    date: new Date(movement.date).toISOString().split('T')[0],
+    notes: movement.notes ?? '',
+    owner: movement.owner ?? '',
+    paymentMethod: movement.paymentMethod ?? '',
+  });
 
   const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -24,36 +33,40 @@ export function NewGastoDialog({ onClose }: Props) {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/movements', {
-        method: 'POST',
+      const body: Record<string, unknown> = {
+        source: form.source,
+        method: form.method,
+        amount: parseFloat(form.amount),
+        date: new Date(form.date).toISOString(),
+      };
+      if (form.notes) body.notes = form.notes;
+      if (form.owner) body.owner = form.owner;
+      if (form.paymentMethod) body.paymentMethod = form.paymentMethod;
+
+      const res = await fetch(`/api/admin/movements/${movement.id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'retiro',
-          source: form.source,
-          method: form.method,
-          amount: parseFloat(form.amount),
-          date: new Date(form.date).toISOString(),
-          notes: form.notes || undefined,
-          owner: form.owner || undefined,
-        }),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.message ?? 'Error al registrar gasto'); }
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.message ?? 'Error al actualizar');
+      }
       router.refresh();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al registrar gasto');
+      setError(err instanceof Error ? err.message : 'Error al actualizar');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AdminModal title="Registrar Gasto" onClose={onClose}>
+    <AdminModal title="Editar Gasto" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className={labelCls} style={labelStyle}>Fuente / Concepto *</label>
           <input required value={form.source} onChange={(e) => set('source', e.target.value)}
-            placeholder="Ej: Proveedor, Alquiler…"
             className={fieldCls} style={fieldStyle} />
         </div>
 
@@ -102,7 +115,7 @@ export function NewGastoDialog({ onClose }: Props) {
           </button>
           <button type="submit" disabled={loading}
             className="btn-gold flex-1 py-2.5 text-sm font-semibold disabled:opacity-60">
-            {loading ? 'Guardando…' : 'Registrar Gasto'}
+            {loading ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </div>
       </form>

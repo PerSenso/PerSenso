@@ -179,6 +179,8 @@ export const api = {
   // Ledger
   ledger: {
     get: () => apiFetch<import('@persenso/shared').LedgerSummary>('/ledger'),
+    getContributions: () =>
+      apiFetch<import('@persenso/shared').FundingContribution[]>('/ledger/contributions'),
     createMovement: (data: import('@persenso/shared').CreateMovementInput) =>
       apiFetch<import('@persenso/shared').CashMovement>('/ledger/movements', {
         method: 'POST',

@@ -157,12 +157,14 @@ model Payment {
 }
 
 model CashMovement {
-  id        String   @id @default(uuid())
-  type      String
-  source    String
-  method    String
-  amount    Decimal  @db.Decimal(10, 2)
-  date      DateTime
-  notes     String?
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  type          String
+  source        String
+  method        String
+  amount        Decimal  @db.Decimal(10, 2)
+  date          DateTime
+  notes         String?
+  owner         String?
+  paymentMethod String?
+  createdAt     DateTime @default(now())
 }

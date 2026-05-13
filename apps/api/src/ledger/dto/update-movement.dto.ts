@@ -4,25 +4,25 @@ import {
   IsPositive,
   IsDateString,
   IsOptional,
-  IsIn,
 } from 'class-validator';
 
-export class CreateMovementDto {
-  @IsIn(['ingreso', 'retiro'])
-  type: string;
-
-  @IsString()
-  source: string;
-
-  @IsString()
-  method: string;
-
+export class UpdateMovementDto {
+  @IsOptional()
   @IsNumber()
   @IsPositive()
-  amount: number;
+  amount?: number;
 
+  @IsOptional()
+  @IsString()
+  source?: string;
+
+  @IsOptional()
+  @IsString()
+  method?: string;
+
+  @IsOptional()
   @IsDateString()
-  date: string;
+  date?: string;
 
   @IsOptional()
   @IsString()

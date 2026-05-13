@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
+import { UpdateMovementDto } from './dto/update-movement.dto';
 
 @Injectable()
 export class LedgerService {
@@ -59,8 +60,50 @@ export class LedgerService {
         amount: dto.amount,
         date: new Date(dto.date),
         notes: dto.notes ?? null,
+        owner: dto.owner ?? null,
+        paymentMethod: dto.paymentMethod ?? null,
       },
     });
+  }
+
+  async updateMovement(id: string, dto: UpdateMovementDto) {
+    const existing = await this.prisma.cashMovement.findUnique({
+      where: { id },
+    });
+    if (!existing) throw new NotFoundException('Movimiento no encontrado');
+    return this.prisma.cashMovement.update({
+      where: { id },
+      data: {
+        ...(dto.amount !== undefined ? { amount: dto.amount } : {}),
+        ...(dto.source !== undefined ? { source: dto.source } : {}),
+        ...(dto.method !== undefined ? { method: dto.method } : {}),
+        ...(dto.date !== undefined ? { date: new Date(dto.date) } : {}),
+        ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
+        ...(dto.owner !== undefined ? { owner: dto.owner } : {}),
+        ...(dto.paymentMethod !== undefined
+          ? { paymentMethod: dto.paymentMethod }
+          : {}),
+      },
+    });
+  }
+
+  async getContributions() {
+    const rows = await this.prisma.$queryRaw<
+      { investor: string; total: string; count: string }[]
+    >`
+      SELECT
+        investor,
+        SUM(amount) AS total,
+        COUNT(DISTINCT "orderId") AS count
+      FROM "FundingEntry"
+      GROUP BY investor
+      ORDER BY SUM(amount) DESC
+    `;
+    return rows.map((r) => ({
+      investor: r.investor,
+      totalContributed: Number(r.total),
+      ordersCount: Number(r.count),
+    }));
   }
 
   async removeMovement(id: string) {

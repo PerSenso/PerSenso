@@ -66,7 +66,7 @@ describe('ReportsService', () => {
         .mockResolvedValueOnce(debtRaw)
         .mockResolvedValueOnce(marginRaw);
 
-      const result = await service.getSummary();
+      const result = await service.getSummary(undefined, undefined);
 
       expect(result.salesByMonth).toHaveLength(2);
       expect(result.salesByMonth[0].sales_count).toBe(5);
@@ -81,7 +81,7 @@ describe('ReportsService', () => {
         .mockResolvedValueOnce(debtRaw)
         .mockResolvedValueOnce(marginRaw);
 
-      const result = await service.getSummary();
+      const result = await service.getSummary(undefined, undefined);
 
       expect(result.topProducts).toHaveLength(2);
       expect(result.topProducts[0].name).toBe('Sauvage');
@@ -96,7 +96,7 @@ describe('ReportsService', () => {
         .mockResolvedValueOnce(debtRaw)
         .mockResolvedValueOnce(marginRaw);
 
-      const result = await service.getSummary();
+      const result = await service.getSummary(undefined, undefined);
 
       expect(result.totalDebt).toBe(250);
     });
@@ -108,7 +108,7 @@ describe('ReportsService', () => {
         .mockResolvedValueOnce(debtRaw)
         .mockResolvedValueOnce(marginRaw);
 
-      const result = await service.getSummary();
+      const result = await service.getSummary(undefined, undefined);
 
       const totalRevenue = result.salesByMonth.reduce(
         (acc, m) => acc + m.revenue,
@@ -124,7 +124,7 @@ describe('ReportsService', () => {
         .mockResolvedValueOnce([{ total_debt: '0' }])
         .mockResolvedValueOnce([]);
 
-      const result = await service.getSummary();
+      const result = await service.getSummary(undefined, undefined);
 
       expect(result.salesByMonth).toHaveLength(0);
       expect(result.topProducts).toHaveLength(0);
@@ -148,9 +148,35 @@ describe('ReportsService', () => {
         .mockResolvedValueOnce([{ total_debt: '0' }])
         .mockResolvedValueOnce([]);
 
-      const result = await service.getSummary();
+      const result = await service.getSummary(undefined, undefined);
 
       expect(result.salesByMonth[0].profit).toBe(0);
+    });
+
+    it('accepts startDate and endDate without errors', async () => {
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce(salesByMonthRaw)
+        .mockResolvedValueOnce(topProductsRaw)
+        .mockResolvedValueOnce(debtRaw)
+        .mockResolvedValueOnce(marginRaw);
+
+      const result = await service.getSummary('2026-01-01', '2026-01-31');
+
+      expect(result.salesByMonth).toHaveLength(2);
+      expect(result.topProducts).toHaveLength(2);
+    });
+
+    it('returns historical data without date params', async () => {
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce(salesByMonthRaw)
+        .mockResolvedValueOnce(topProductsRaw)
+        .mockResolvedValueOnce(debtRaw)
+        .mockResolvedValueOnce(marginRaw);
+
+      const result = await service.getSummary();
+
+      expect(result.salesByMonth).toHaveLength(2);
+      expect(result.totalDebt).toBe(250);
     });
   });
 });
