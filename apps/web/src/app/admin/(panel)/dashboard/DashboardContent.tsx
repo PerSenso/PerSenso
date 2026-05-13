@@ -5,6 +5,7 @@ import { AdminStatCard } from '@/components/admin/AdminStatCard';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminModal } from '@/components/admin/AdminModal';
 import { NotaCell } from '@/components/admin/NotaCell';
+import { ClienteDetailModal } from '@/app/admin/(panel)/clientes/ClienteDetailModal';
 import {
   ShoppingCart,
   Users,
@@ -16,6 +17,7 @@ import {
   Clock,
   AlertCircle,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import type {
   Sale,
@@ -41,6 +43,68 @@ interface DashboardContentProps {
 
 function formatCurrency(amount: number): string {
   return `$${amount.toFixed(2)}`;
+}
+
+function SaleDetailModal({ sale, onClose }: { sale: Sale; onClose: () => void }) {
+  const paid = (sale.payments ?? []).reduce((s, p) => s + Number(p.amount), 0);
+  const pending = Math.max(0, Number(sale.total) - paid);
+  return (
+    <AdminModal title={sale.client?.name ?? 'Detalle de Venta'} onClose={onClose} maxWidth="max-w-lg">
+      <div className="space-y-4">
+        <div className="rounded-lg px-4 py-3 space-y-1" style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--ps-text-muted)' }}>Venta</p>
+          <div className="flex justify-between text-sm">
+            <span style={{ color: 'var(--ps-text-muted)' }}>Producto</span>
+            <span className="font-medium" style={{ color: 'var(--ps-text)' }}>{sale.product?.name ?? '—'}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span style={{ color: 'var(--ps-text-muted)' }}>Fecha</span>
+            <span style={{ color: 'var(--ps-text)' }}>{new Date(sale.date).toLocaleDateString('es-VE')}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Total',   value: formatCurrency(Number(sale.total)), color: 'var(--ps-text)' },
+            { label: 'Pagado',  value: formatCurrency(paid),               color: 'var(--ps-green)' },
+            { label: 'Saldo',   value: pending > 0 ? formatCurrency(pending) : '—', color: pending > 0 ? 'var(--ps-red)' : 'var(--ps-text-muted)' },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="rounded-xl p-3 text-center" style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--ps-text-muted)' }}>{label}</p>
+              <p className="text-base font-bold tabular-nums" style={{ color }}>{value}</p>
+            </div>
+          ))}
+        </div>
+
+        {(sale.payments ?? []).length > 0 && (
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--ps-text-muted)' }}>Pagos</p>
+            <div className="space-y-1.5">
+              {(sale.payments ?? []).map((p) => (
+                <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg"
+                  style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
+                  <div className="text-sm">
+                    <span className="font-medium" style={{ color: 'var(--ps-green)' }}>{formatCurrency(Number(p.amount))}</span>
+                    <span className="mx-1.5 text-xs" style={{ color: 'var(--ps-text-muted)' }}>·</span>
+                    <span className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>{p.paymentMethod}</span>
+                    <span className="mx-1.5 text-xs" style={{ color: 'var(--ps-text-muted)' }}>·</span>
+                    <span className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>{new Date(p.date).toLocaleDateString('es-VE')}</span>
+                  </div>
+                  {p.receiptUrl && (
+                    <a href={p.receiptUrl} target="_blank" rel="noreferrer"
+                      className="w-6 h-6 flex items-center justify-center rounded"
+                      style={{ color: 'var(--ps-gold)' }} title="Ver comprobante">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </AdminModal>
+  );
 }
 
 function HistorialModal({ debt, onClose }: { debt: DashboardDebt; onClose: () => void }) {
@@ -127,6 +191,8 @@ export function DashboardContent({
   const [salesStatus, setSalesStatus] = useState<DashboardSalesStatus>(initialSalesStatus);
   const [topClients, setTopClients] = useState<DashboardTopClient[]>(initialTopClients);
   const [historialDebt, setHistorialDebt] = useState<DashboardDebt | null>(null);
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<{ id: string; name: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function fetchWithDates(start: string, end: string) {
@@ -256,7 +322,7 @@ export function DashboardContent({
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
         <AdminStatCard
           title="Ventas Totales"
           value={salesCount}
@@ -281,6 +347,13 @@ export function DashboardContent({
           value={formatCurrency(balance)}
           icon={DollarSign}
           color={balance >= 0 ? 'green' : 'red'}
+        />
+        <AdminStatCard
+          title="Deuda Total Clientes"
+          value={formatCurrency(debts.reduce((s, d) => s + d.pending, 0))}
+          subtitle={`${debts.length} ventas pendientes`}
+          icon={AlertCircle}
+          color="red"
         />
       </div>
 
@@ -411,41 +484,36 @@ export function DashboardContent({
         )}
       </div>
 
-      {/* Top Clientes */}
-      <div className="mb-8 card-persenso p-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>
-          Top Clientes
-        </h2>
-        {topClients.length === 0 ? (
-          <p className="text-sm py-4 text-center" style={{ color: 'var(--ps-text-muted)' }}>
-            No hay datos de clientes
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {topClients.slice(0, 10).map((c, i) => {
-              const initial = c.name.charAt(0).toUpperCase();
-              return (
+      {/* Top Clientes + Últimas Ventas — lado a lado */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Top Clientes */}
+        <div className="card-persenso p-6 flex flex-col">
+          <h2 className="text-sm font-bold uppercase tracking-widest mb-4 flex-shrink-0" style={{ color: 'var(--ps-text-muted)' }}>
+            Top Clientes
+          </h2>
+          {topClients.length === 0 ? (
+            <p className="text-sm py-4 text-center" style={{ color: 'var(--ps-text-muted)' }}>
+              No hay datos de clientes
+            </p>
+          ) : (
+            <div className="overflow-y-auto pr-3" style={{ maxHeight: 320 }}>
+              {topClients.slice(0, 10).map((c, i) => (
                 <div
                   key={c.clientId}
-                  className="flex items-center gap-3 py-2"
+                  onClick={() => setSelectedClientId({ id: c.clientId, name: c.name })}
+                  className="flex items-center gap-3 py-2 cursor-pointer hover:bg-white/5 rounded-lg px-1 transition-colors"
                   style={{ borderBottom: '1px solid var(--ps-border)' }}
                 >
-                  <span
-                    className="text-xs font-bold tabular-nums w-5 text-right flex-shrink-0"
-                    style={{ color: 'var(--ps-text-muted)' }}
-                  >
+                  <span className="text-xs font-bold tabular-nums w-5 text-right flex-shrink-0" style={{ color: 'var(--ps-text-muted)' }}>
                     {i + 1}
                   </span>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"
-                    style={{ background: 'var(--ps-gold)', color: 'var(--ps-bg)' }}
-                  >
-                    {initial}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                    style={{ background: 'var(--ps-gold)', color: 'var(--ps-bg)' }}>
+                    {c.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--ps-text)' }}>
-                      {c.name}
-                    </p>
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--ps-text)' }}>{c.name}</p>
                     <p className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>
                       {c.salesCount} {c.salesCount === 1 ? 'venta' : 'ventas'}
                     </p>
@@ -454,48 +522,81 @@ export function DashboardContent({
                     {formatCurrency(c.totalPaid)}
                   </p>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-      {/* Últimas Ventas */}
-      <div className="card-persenso p-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>
-          Últimas Ventas
-        </h2>
-        {recentSales.length === 0 ? (
-          <p className="text-sm py-4 text-center" style={{ color: 'var(--ps-text-muted)' }}>
-            No hay ventas registradas
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {recentSales.map((sale) => (
-              <div
-                key={sale.id}
-                className="flex items-center justify-between py-2 px-3 rounded-lg transition-colors"
-                style={{ borderBottom: '1px solid var(--ps-border)' }}
-              >
-                <div>
-                  <p className="text-sm font-medium" style={{ color: 'var(--ps-text)' }}>
-                    {sale.product?.name || 'Producto'} — #{sale.id.slice(0, 8)}
-                  </p>
-                  <p className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>
-                    {new Date(sale.date).toLocaleDateString('es-VE')}
-                  </p>
-                </div>
-                <p className="text-sm font-semibold" style={{ color: 'var(--ps-gold)' }}>
-                  {formatCurrency(Number(sale.total))}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Últimas Ventas */}
+        <div className="card-persenso p-6 flex flex-col">
+          <h2 className="text-sm font-bold uppercase tracking-widest mb-4 flex-shrink-0" style={{ color: 'var(--ps-text-muted)' }}>
+            Últimas Ventas
+          </h2>
+          {recentSales.length === 0 ? (
+            <p className="text-sm py-4 text-center" style={{ color: 'var(--ps-text-muted)' }}>
+              No hay ventas registradas
+            </p>
+          ) : (
+            <div className="overflow-auto pr-3" style={{ maxHeight: 320 }}>
+              <table className="w-full text-sm">
+                <thead className="sticky top-0" style={{ background: 'var(--ps-card-bg, var(--ps-bg))' }}>
+                  <tr style={{ borderBottom: '1px solid var(--ps-border)' }}>
+                    {['Cliente / Producto', 'Fecha', 'Total', 'Saldo'].map((h) => (
+                      <th key={h} className="text-left py-2 px-2 text-[10px] font-bold uppercase tracking-widest"
+                        style={{ color: 'var(--ps-text-muted)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentSales.map((sale) => {
+                    const paid = (sale.payments ?? []).reduce((s, p) => s + Number(p.amount), 0);
+                    const pending = Math.max(0, Number(sale.total) - paid);
+                    return (
+                      <tr key={sale.id} onClick={() => setSelectedSale(sale)}
+                        className="cursor-pointer hover:bg-white/5 transition-colors"
+                        style={{ borderBottom: '1px solid var(--ps-border)' }}>
+                        <td className="py-2 px-2 w-full max-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: 'var(--ps-text)' }}>
+                            {sale.client?.name ?? '—'}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: 'var(--ps-text-muted)' }}>
+                            {sale.product?.name ?? '—'}
+                          </p>
+                        </td>
+                        <td className="py-2 px-2 tabular-nums whitespace-nowrap text-xs" style={{ color: 'var(--ps-text-muted)' }}>
+                          {new Date(sale.date).toLocaleDateString('es-VE')}
+                        </td>
+                        <td className="py-2 px-2 tabular-nums font-semibold whitespace-nowrap text-sm" style={{ color: 'var(--ps-gold)' }}>
+                          {formatCurrency(Number(sale.total))}
+                        </td>
+                        <td className="py-2 px-2 tabular-nums font-semibold whitespace-nowrap text-sm"
+                          style={{ color: pending > 0 ? 'var(--ps-red)' : 'var(--ps-text-muted)' }}>
+                          {pending > 0 ? formatCurrency(pending) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {historialDebt && (
         <HistorialModal debt={historialDebt} onClose={() => setHistorialDebt(null)} />
+      )}
+
+      {selectedSale && (
+        <SaleDetailModal sale={selectedSale} onClose={() => setSelectedSale(null)} />
+      )}
+
+      {selectedClientId && (
+        <ClienteDetailModal
+          client={{ id: selectedClientId.id, name: selectedClientId.name, debt: 0, createdAt: '', updatedAt: '' }}
+          onClose={() => setSelectedClientId(null)}
+        />
       )}
     </>
   );

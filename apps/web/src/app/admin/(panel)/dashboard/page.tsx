@@ -47,7 +47,7 @@ export default async function DashboardPage() {
       balance={ledger.balance}
       totalIn={ledger.totalIn}
       totalOut={ledger.totalOut}
-      recentSales={sales.slice(0, 5)}
+      recentSales={sales.slice(0, 20)}
       initialDebts={debts}
       initialSalesStatus={salesStatus}
       initialTopClients={topClients}

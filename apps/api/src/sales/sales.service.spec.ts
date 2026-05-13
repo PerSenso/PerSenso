@@ -213,9 +213,15 @@ describe('SalesService', () => {
       mockPrisma.$transaction.mockImplementation(
         async (fn: (tx: any) => any) => {
           mockTx.product.findUnique.mockResolvedValueOnce(mockProductWithStock);
-          mockTx.restock.findFirst.mockResolvedValue({ id: 'r1', baseUnitCost: 0 });
+          mockTx.restock.findFirst.mockResolvedValue({
+            id: 'r1',
+            baseUnitCost: 0,
+          });
           mockTx.sale.create.mockResolvedValue(mockSale);
-          mockTx.sale.findUnique.mockResolvedValue({ ...mockSale, payments: [] });
+          mockTx.sale.findUnique.mockResolvedValue({
+            ...mockSale,
+            payments: [],
+          });
           return fn({
             restock: mockTx.restock,
             sale: mockTx.sale,
@@ -253,7 +259,10 @@ describe('SalesService', () => {
             .mockResolvedValueOnce({ id: 'prod-1', costPrice: 60 }); // getProductCost
           mockTx.restock.findFirst.mockResolvedValue(null);
           mockTx.sale.create.mockResolvedValue(mockSale);
-          mockTx.sale.findUnique.mockResolvedValue({ ...mockSale, payments: [] });
+          mockTx.sale.findUnique.mockResolvedValue({
+            ...mockSale,
+            payments: [],
+          });
           return fn({
             restock: mockTx.restock,
             sale: mockTx.sale,
