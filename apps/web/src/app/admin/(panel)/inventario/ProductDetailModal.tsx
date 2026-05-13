@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { AdminModal } from '@/components/admin/AdminModal';
-import { ImageOff } from 'lucide-react';
+import { ImageOff, Trash2 } from 'lucide-react';
 import type { ProductAdmin } from '@persenso/shared';
 
 interface Props {
@@ -22,6 +25,28 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function ProductDetailModal({ product, onClose, onEdit }: Props) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { message?: string }).message ?? 'Error al eliminar');
+      }
+      toast.success('Producto eliminado');
+      router.refresh();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar el producto');
+      setDeleting(false);
+      setConfirming(false);
+    }
+  };
+
   const stock = product.stock ?? 0;
   const minStock = product.minStock ?? 2;
   const isLow = stock <= minStock;
@@ -105,12 +130,45 @@ export function ProductDetailModal({ product, onClose, onEdit }: Props) {
         </div>
       )}
 
-      <button
-        onClick={onEdit}
-        className="btn-gold w-full py-2.5 text-sm font-bold uppercase tracking-widest"
-      >
-        Editar producto
-      </button>
+      <div className="flex gap-3">
+        {confirming ? (
+          <>
+            <button
+              onClick={() => setConfirming(false)}
+              disabled={deleting}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'var(--ps-surface)', color: 'var(--ps-text-muted)', border: '1px solid var(--ps-border)' }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 py-2.5 rounded-lg text-sm font-bold uppercase tracking-widest disabled:opacity-50"
+              style={{ background: 'rgba(224,92,92,0.15)', color: 'var(--ps-red)', border: '1px solid var(--ps-red)' }}
+            >
+              {deleting ? 'Eliminando…' : 'Confirmar'}
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setConfirming(true)}
+              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(224,92,92,0.1)', color: 'var(--ps-red)', border: '1px solid rgba(224,92,92,0.3)' }}
+              title="Eliminar producto"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onEdit}
+              className="btn-gold flex-1 py-2.5 text-sm font-bold uppercase tracking-widest"
+            >
+              Editar producto
+            </button>
+          </>
+        )}
+      </div>
     </AdminModal>
   );
 }
