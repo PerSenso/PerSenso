@@ -61,16 +61,22 @@ async function main() {
     const dataUri: string = fb.image;
 
     try {
-      // 1. Subir a Cloudinary (acepta data URI directamente)
-      const imageUrl = await uploadBase64ToCloudinary(dataUri);
-
-      // 2. Buscar el producto en PostgreSQL por nombre exacto
+      // 1. Buscar el producto en PostgreSQL por nombre exacto
       const product = await prisma.product.findFirst({ where: { name } });
       if (!product) {
         throw new Error(`Producto no encontrado en BD con name="${name}"`);
       }
 
-      // 3. Actualizar imageUrl
+      // 2. Si ya tiene imageUrl, saltar para no duplicar en Cloudinary
+      if (product.imageUrl) {
+        console.log(`   ⏭️  [skip] ${name} — ya tiene imagen`);
+        continue;
+      }
+
+      // 3. Subir a Cloudinary (acepta data URI directamente)
+      const imageUrl = await uploadBase64ToCloudinary(dataUri);
+
+      // 4. Actualizar imageUrl
       await prisma.product.update({
         where: { id: product.id },
         data: { imageUrl },
