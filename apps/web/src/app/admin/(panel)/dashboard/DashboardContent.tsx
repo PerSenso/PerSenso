@@ -27,6 +27,15 @@ import type {
   Payment,
 } from '@persenso/shared';
 
+interface DashboardSummary {
+  salesCount: number;
+  totalRevenue: number;
+  totalIn: number;
+  totalOut: number;
+  balance: number;
+  recentSales: Sale[];
+}
+
 interface DashboardContentProps {
   salesCount: number;
   clientsCount: number;
@@ -190,6 +199,9 @@ export function DashboardContent({
   const [debts, setDebts] = useState<DashboardDebt[]>(initialDebts);
   const [salesStatus, setSalesStatus] = useState<DashboardSalesStatus>(initialSalesStatus);
   const [topClients, setTopClients] = useState<DashboardTopClient[]>(initialTopClients);
+  const [summary, setSummary] = useState<DashboardSummary>({
+    salesCount, totalRevenue, totalIn, totalOut, balance, recentSales,
+  });
   const [historialDebt, setHistorialDebt] = useState<DashboardDebt | null>(null);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<{ id: string; name: string } | null>(null);
@@ -203,15 +215,17 @@ export function DashboardContent({
       if (end) qs.set('endDate', end);
       const q = qs.toString() ? `?${qs.toString()}` : '';
 
-      const [d, s, t] = await Promise.all([
+      const [d, s, t, sm] = await Promise.all([
         fetch(`/api/admin/dashboard/debts${q}`).then((r) => r.json()),
         fetch(`/api/admin/dashboard/sales-status${q}`).then((r) => r.json()),
         fetch(`/api/admin/dashboard/top-clients${q}`).then((r) => r.json()),
+        fetch(`/api/admin/dashboard/summary${q}`).then((r) => r.json()),
       ]);
 
       setDebts(d);
       setSalesStatus(s);
       setTopClients(t);
+      setSummary(sm);
     } finally {
       setLoading(false);
     }
@@ -229,6 +243,7 @@ export function DashboardContent({
     setDebts(initialDebts);
     setSalesStatus(initialSalesStatus);
     setTopClients(initialTopClients);
+    setSummary({ salesCount, totalRevenue, totalIn, totalOut, balance, recentSales });
   }
 
   const statusCards = [
@@ -325,8 +340,8 @@ export function DashboardContent({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
         <AdminStatCard
           title="Ventas Totales"
-          value={salesCount}
-          subtitle={`${formatCurrency(totalRevenue)} en ingresos`}
+          value={summary.salesCount}
+          subtitle={`${formatCurrency(summary.totalRevenue)} en ingresos`}
           icon={ShoppingCart}
           color="gold"
         />
@@ -344,9 +359,9 @@ export function DashboardContent({
         />
         <AdminStatCard
           title="Balance Caja"
-          value={formatCurrency(balance)}
+          value={formatCurrency(summary.balance)}
           icon={DollarSign}
-          color={balance >= 0 ? 'green' : 'red'}
+          color={summary.balance >= 0 ? 'green' : 'red'}
         />
         <AdminStatCard
           title="Deuda Total Clientes"
@@ -372,7 +387,7 @@ export function DashboardContent({
                 Ingresos
               </p>
               <p className="text-xl font-semibold" style={{ color: 'var(--ps-green)' }}>
-                {formatCurrency(totalIn)}
+                {formatCurrency(summary.totalIn)}
               </p>
             </div>
           </div>
@@ -391,7 +406,7 @@ export function DashboardContent({
                 Egresos
               </p>
               <p className="text-xl font-semibold" style={{ color: 'var(--ps-red)' }}>
-                {formatCurrency(totalOut)}
+                {formatCurrency(summary.totalOut)}
               </p>
             </div>
           </div>
@@ -532,7 +547,7 @@ export function DashboardContent({
           <h2 className="text-sm font-bold uppercase tracking-widest mb-4 flex-shrink-0" style={{ color: 'var(--ps-text-muted)' }}>
             Últimas Ventas
           </h2>
-          {recentSales.length === 0 ? (
+          {summary.recentSales.length === 0 ? (
             <p className="text-sm py-4 text-center" style={{ color: 'var(--ps-text-muted)' }}>
               No hay ventas registradas
             </p>
@@ -548,7 +563,7 @@ export function DashboardContent({
                   </tr>
                 </thead>
                 <tbody>
-                  {recentSales.map((sale) => {
+                  {summary.recentSales.map((sale) => {
                     const paid = (sale.payments ?? []).reduce((s, p) => s + Number(p.amount), 0);
                     const pending = Math.max(0, Number(sale.total) - paid);
                     return (

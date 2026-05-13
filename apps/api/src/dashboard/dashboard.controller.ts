@@ -33,4 +33,12 @@ export class DashboardController {
   ) {
     return this.dashboardService.getTopClients(startDate, endDate);
   }
+
+  @Get('summary')
+  getSummary(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.dashboardService.getSummary(startDate, endDate);
+  }
 }

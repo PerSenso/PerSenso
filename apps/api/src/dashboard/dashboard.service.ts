@@ -86,6 +86,66 @@ export class DashboardService {
     return result;
   }
 
+  async getSummary(startDate?: string, endDate?: string) {
+    const dateWhere = this.buildDateWhere(startDate, endDate);
+
+    const [sales, recentSales, payments, manualIn, manualOut] =
+      await Promise.all([
+        this.prisma.sale.findMany({
+          where: { status: 'ACTIVA', ...dateWhere },
+          select: { total: true },
+        }),
+        this.prisma.sale.findMany({
+          where: { status: 'ACTIVA', ...dateWhere },
+          include: {
+            client: { select: { id: true, name: true } },
+            product: { select: { id: true, name: true } },
+            payments: true,
+          },
+          orderBy: { date: 'desc' },
+          take: 20,
+        }),
+        this.prisma.payment.aggregate({
+          where: dateWhere ? { date: (dateWhere as any).date } : {},
+          _sum: { amount: true },
+        }),
+        this.prisma.cashMovement.aggregate({
+          where: { type: 'ingreso', ...dateWhere },
+          _sum: { amount: true },
+        }),
+        this.prisma.cashMovement.aggregate({
+          where: { type: 'retiro', ...dateWhere },
+          _sum: { amount: true },
+        }),
+      ]);
+
+    const totalRevenue = sales.reduce((s, sale) => s + Number(sale.total), 0);
+    const totalIn =
+      Number(payments._sum.amount ?? 0) + Number(manualIn._sum.amount ?? 0);
+    const totalOut = Number(manualOut._sum.amount ?? 0);
+
+    return {
+      salesCount: sales.length,
+      totalRevenue,
+      totalIn,
+      totalOut,
+      balance: totalIn - totalOut,
+      recentSales: recentSales.map((s) => ({
+        ...s,
+        total: Number(s.total),
+        date: s.date.toISOString(),
+        createdAt: s.createdAt.toISOString(),
+        updatedAt: s.updatedAt.toISOString(),
+        payments: s.payments.map((p) => ({
+          ...p,
+          amount: Number(p.amount),
+          date: p.date.toISOString(),
+          createdAt: p.createdAt.toISOString(),
+        })),
+      })),
+    };
+  }
+
   async getTopClients(startDate?: string, endDate?: string) {
     const sales = await this.prisma.sale.findMany({
       where: { status: 'ACTIVA', ...this.buildDateWhere(startDate, endDate) },
