@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { X, Paperclip } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,8 @@ interface NewSaleDialogProps {
 export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     clientId: '',
     productId: '',
@@ -60,6 +62,14 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { message?: string }).message ?? 'Error al crear la venta');
+      }
+
+      const created = await res.json() as { payments?: { id: string; isInitial: boolean }[] };
+      if (receiptFile && created.payments?.length) {
+        const initialPayment = created.payments.find((p) => p.isInitial) ?? created.payments[0];
+        const fd = new FormData();
+        fd.append('receipt', receiptFile);
+        await fetch(`/api/admin/payments/${initialPayment.id}/receipt`, { method: 'POST', body: fd });
       }
 
       toast.success('Venta creada exitosamente');
@@ -227,6 +237,30 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
                 </select>
               </div>
             </div>
+            {form.initialPaymentAmount && form.initialPaymentMethod && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => receiptInputRef.current?.click()}
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors"
+                  style={{
+                    border: '1px dashed var(--ps-border)',
+                    color: receiptFile ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
+                    background: receiptFile ? 'rgba(201,168,76,0.06)' : 'transparent',
+                  }}
+                >
+                  <Paperclip className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{receiptFile ? receiptFile.name : 'Adjuntar comprobante (opcional)'}</span>
+                </button>
+                <input
+                  ref={receiptInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+            )}
           </div>
 
           <button

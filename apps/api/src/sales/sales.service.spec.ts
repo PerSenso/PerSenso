@@ -38,7 +38,7 @@ const mockProductNoStock = {
 const mockTx = {
   restock: { findFirst: jest.fn() },
   product: { findUnique: jest.fn() },
-  sale: { create: jest.fn(), findMany: jest.fn() },
+  sale: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn() },
   payment: { create: jest.fn() },
 };
 
@@ -58,10 +58,10 @@ const mockPrisma = {
 
 function makeTxWithStock(productWithStock = mockProductWithStock) {
   return async (fn: (tx: any) => any) => {
-    // First call: stock validation query
     mockTx.product.findUnique.mockResolvedValueOnce(productWithStock);
     mockTx.restock.findFirst.mockResolvedValue(mockRestock);
     mockTx.sale.create.mockResolvedValue(mockSale);
+    mockTx.sale.findUnique.mockResolvedValue({ ...mockSale, payments: [] });
     return fn({
       restock: mockTx.restock,
       sale: mockTx.sale,
@@ -213,11 +213,9 @@ describe('SalesService', () => {
       mockPrisma.$transaction.mockImplementation(
         async (fn: (tx: any) => any) => {
           mockTx.product.findUnique.mockResolvedValueOnce(mockProductWithStock);
-          mockTx.restock.findFirst.mockResolvedValue({
-            id: 'r1',
-            baseUnitCost: 0,
-          });
+          mockTx.restock.findFirst.mockResolvedValue({ id: 'r1', baseUnitCost: 0 });
           mockTx.sale.create.mockResolvedValue(mockSale);
+          mockTx.sale.findUnique.mockResolvedValue({ ...mockSale, payments: [] });
           return fn({
             restock: mockTx.restock,
             sale: mockTx.sale,
@@ -255,6 +253,7 @@ describe('SalesService', () => {
             .mockResolvedValueOnce({ id: 'prod-1', costPrice: 60 }); // getProductCost
           mockTx.restock.findFirst.mockResolvedValue(null);
           mockTx.sale.create.mockResolvedValue(mockSale);
+          mockTx.sale.findUnique.mockResolvedValue({ ...mockSale, payments: [] });
           return fn({
             restock: mockTx.restock,
             sale: mockTx.sale,

@@ -131,7 +131,10 @@ export class SalesService {
         });
       }
 
-      return sale;
+      return tx.sale.findUnique({
+        where: { id: sale.id },
+        include: { payments: true },
+      });
     });
   }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AdminModal } from '@/components/admin/AdminModal';
-import { Phone, MapPin, Hash } from 'lucide-react';
+import { Phone, MapPin, Hash, Share2 } from 'lucide-react';
 import type { ClientWithDebt } from '@persenso/shared';
 
 interface Sale {
@@ -15,6 +15,7 @@ interface Sale {
 }
 
 interface ClientDetail extends ClientWithDebt {
+  source?: string;
   sales: Sale[];
   totalSpent: number;
   totalPaid: number;
@@ -72,6 +73,12 @@ export function ClienteDetailModal({ client, onClose }: Props) {
               <div className="flex items-center gap-2 text-sm col-span-2" style={{ color: 'var(--ps-text-muted)' }}>
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>{detail.address}</span>
+              </div>
+            )}
+            {detail.source && (
+              <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--ps-text-muted)' }}>
+                <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{detail.source}</span>
               </div>
             )}
           </div>
