@@ -26,7 +26,7 @@ export function NewProductoDialog({ onClose }: Props) {
   const [form, setForm] = useState({
     name: '',
     brand: '',
-    concentration: '',
+    concentration: 'EDP',
     gender: 'UNISEX',
     sizeMl: '',
     costPrice: '',

@@ -7,6 +7,7 @@ import type { ProductAdmin } from '@persenso/shared';
 import { Plus, AlertTriangle, Pencil } from 'lucide-react';
 import { NewProductoDialog } from './NewProductoDialog';
 import { EditProductoDialog } from './EditProductoDialog';
+import { ProductDetailModal } from './ProductDetailModal';
 import { IdBadge } from '@/components/admin/IdBadge';
 
 interface InventarioContentProps {
@@ -24,6 +25,7 @@ const GENDER_CHIPS: { value: GenderFilter; label: string }[] = [
 
 export function InventarioContent({ products }: InventarioContentProps) {
   const [showNew, setShowNew] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<ProductAdmin | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductAdmin | null>(null);
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [stockCritico, setStockCritico] = useState(false);
@@ -51,6 +53,13 @@ export function InventarioContent({ products }: InventarioContentProps) {
         }
       />
       {showNew && <NewProductoDialog onClose={() => setShowNew(false)} />}
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          onClose={() => setDetailProduct(null)}
+          onEdit={() => { setEditingProduct(detailProduct); setDetailProduct(null); }}
+        />
+      )}
       {editingProduct && <EditProductoDialog product={editingProduct} onClose={() => setEditingProduct(null)} />}
 
       {/* Chips de filtro */}
@@ -95,6 +104,7 @@ export function InventarioContent({ products }: InventarioContentProps) {
         searchPlaceholder="Buscar por nombre o marca…"
         searchKeys={['name', 'brand']}
         filterFn={hasFilter ? filterFn : undefined}
+        onRowClick={(p) => setDetailProduct(p)}
         columns={[
           { key: '_id', header: 'ID', render: (p) => <IdBadge id={p.id} /> },
           {
@@ -102,8 +112,10 @@ export function InventarioContent({ products }: InventarioContentProps) {
             render: (p) => (
               <div>
                 <p className="font-medium" style={{ color: 'var(--ps-text)' }}>{p.name}</p>
-                {p.brand && (
-                  <p className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>{p.brand}</p>
+                {(p.brand || p.concentration) && (
+                  <p className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>
+                    {[p.brand, p.concentration].filter(Boolean).join(' · ')}
+                  </p>
                 )}
               </div>
             ),
