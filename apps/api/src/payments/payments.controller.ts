@@ -68,6 +68,11 @@ export class PaymentsController {
     return this.paymentsService.updateReceiptUrl(id, url);
   }
 
+  @Delete(':id/receipt')
+  deleteReceipt(@Param('id', ParseUUIDPipe) id: string) {
+    return this.paymentsService.deleteReceiptUrl(id);
+  }
+
   @Roles('OWNER')
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {

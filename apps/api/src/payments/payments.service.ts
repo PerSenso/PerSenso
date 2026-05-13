@@ -58,6 +58,11 @@ export class PaymentsService {
     return this.prisma.payment.update({ where: { id }, data: { receiptUrl } });
   }
 
+  async deleteReceiptUrl(id: string) {
+    await this.findOne(id);
+    return this.prisma.payment.update({ where: { id }, data: { receiptUrl: null } });
+  }
+
   async remove(id: string) {
     await this.findOne(id);
     return this.prisma.payment.delete({ where: { id } });

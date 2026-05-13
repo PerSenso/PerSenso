@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Upload, ExternalLink } from 'lucide-react';
+import { Upload, ExternalLink, Trash2 } from 'lucide-react';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
 import type { Sale } from '@persenso/shared';
 
@@ -89,6 +89,18 @@ export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
   const triggerUpload = (paymentId: string) => {
     pendingPaymentId.current = paymentId;
     fileInputRef.current?.click();
+  };
+
+  const handleDeleteReceipt = async (paymentId: string) => {
+    try {
+      const res = await fetch(`/api/admin/payments/${paymentId}/receipt`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setLocalReceipts((prev) => { const next = { ...prev }; delete next[paymentId]; return next; });
+      toast.success('Comprobante eliminado');
+      router.refresh();
+    } catch {
+      toast.error('Error al eliminar el comprobante');
+    }
   };
 
   return (
@@ -217,6 +229,15 @@ export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
                       title={receiptUrl ? 'Reemplazar comprobante' : 'Subir comprobante'}>
                       <Upload className="w-3.5 h-3.5" />
                     </button>
+                    {receiptUrl && (
+                      <button
+                        onClick={() => handleDeleteReceipt(p.id)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center"
+                        style={{ color: 'var(--ps-red)', background: 'rgba(224,92,92,0.1)' }}
+                        title="Eliminar comprobante">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

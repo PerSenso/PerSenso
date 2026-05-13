@@ -369,19 +369,32 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
             </div>
             {form.initialPaymentAmount && form.initialPaymentMethod && (
               <div className="mt-2">
-                <button
-                  type="button"
-                  onClick={() => receiptInputRef.current?.click()}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors"
-                  style={{
-                    border: '1px dashed var(--ps-border)',
-                    color: receiptFile ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
-                    background: receiptFile ? 'rgba(201,168,76,0.06)' : 'transparent',
-                  }}
-                >
-                  <Paperclip className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate">{receiptFile ? receiptFile.name : 'Adjuntar comprobante (opcional)'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => receiptInputRef.current?.click()}
+                    className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg text-sm transition-colors"
+                    style={{
+                      border: '1px dashed var(--ps-border)',
+                      color: receiptFile ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
+                      background: receiptFile ? 'rgba(201,168,76,0.06)' : 'transparent',
+                    }}
+                  >
+                    <Paperclip className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">{receiptFile ? receiptFile.name : 'Adjuntar comprobante (opcional)'}</span>
+                  </button>
+                  {receiptFile && (
+                    <button
+                      type="button"
+                      onClick={() => { setReceiptFile(null); if (receiptInputRef.current) receiptInputRef.current.value = ''; }}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ color: 'var(--ps-red)', background: 'rgba(224,92,92,0.1)' }}
+                      title="Quitar comprobante"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
                 <input
                   ref={receiptInputRef}
                   type="file"
