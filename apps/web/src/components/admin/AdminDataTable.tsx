@@ -60,10 +60,14 @@ export function AdminDataTable<T>({
   // 1. Sort
   const sorted = sortKey
     ? [...data].sort((a, b) => {
-        const aVal = (a as Record<string, unknown>)[sortKey];
-        const bVal = (b as Record<string, unknown>)[sortKey];
-        if (aVal == null) return 1;
-        if (bVal == null) return -1;
+        const aRaw = (a as Record<string, unknown>)[sortKey];
+        const bRaw = (b as Record<string, unknown>)[sortKey];
+        if (aRaw == null) return 1;
+        if (bRaw == null) return -1;
+        const aNum = Number(aRaw);
+        const bNum = Number(bRaw);
+        const aVal = !isNaN(aNum) ? aNum : aRaw;
+        const bVal = !isNaN(bNum) ? bNum : bRaw;
         const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
         return sortDir === 'asc' ? cmp : -cmp;
       })
