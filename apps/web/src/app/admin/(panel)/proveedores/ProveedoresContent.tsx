@@ -3,7 +3,7 @@
 import React from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
-import type { Supplier, Order, OrderKpis } from '@persenso/shared';
+import type { Supplier, Order, OrderKpis, ProductAdmin } from '@persenso/shared';
 import {
   Plus, Truck, Package, Pencil, ChevronDown, ChevronUp,
   ShoppingBag, BarChart3, DollarSign, Filter,
@@ -14,9 +14,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { NewProveedorDialog } from './NewProveedorDialog';
 import { EditProveedorDialog } from './EditProveedorDialog';
 import { EditOrderDialog } from './EditOrderDialog';
+import { NewOrderDialog } from './NewOrderDialog';
 
 interface ProveedoresContentProps {
   suppliers: Supplier[];
+  products: ProductAdmin[];
 }
 
 function formatCurrency(amount: number): string {
@@ -49,7 +51,7 @@ function KpiCard({ icon, label, value }: KpiCardProps) {
   );
 }
 
-export function ProveedoresContent({ suppliers }: ProveedoresContentProps) {
+export function ProveedoresContent({ suppliers, products }: ProveedoresContentProps) {
   const [activeTab, setActiveTab] = useState<'suppliers' | 'orders'>('suppliers');
   const [showNew, setShowNew] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -120,6 +122,9 @@ export function ProveedoresContent({ suppliers }: ProveedoresContentProps) {
 
       {showNew && activeTab === 'suppliers' && (
         <NewProveedorDialog onClose={() => setShowNew(false)} />
+      )}
+      {showNew && activeTab === 'orders' && (
+        <NewOrderDialog suppliers={suppliers} products={products} onClose={() => setShowNew(false)} />
       )}
       {editingSupplier && (
         <EditProveedorDialog supplier={editingSupplier} onClose={() => setEditingSupplier(null)} />
