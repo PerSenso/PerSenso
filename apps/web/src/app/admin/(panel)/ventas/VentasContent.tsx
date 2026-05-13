@@ -3,7 +3,7 @@
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Sale, Client, ProductAdmin } from '@persenso/shared';
-import { Plus, Pencil, GitBranch, Ban } from 'lucide-react';
+import { Plus, Pencil, Ban } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -145,6 +145,7 @@ export function VentasContent({ sales, clients, products }: VentasContentProps) 
         searchPlaceholder="Buscar por cliente o producto…"
         searchKeys={['client.name', 'product.name']}
         filterFn={filterFn}
+        onRowClick={(s) => setTracingSale(s)}
         columns={[
           {
             key: '_id', header: 'ID',
@@ -182,14 +183,6 @@ export function VentasContent({ sales, clients, products }: VentasContentProps) 
             key: '_actions', header: '',
             render: (s) => (
               <div className="flex items-center gap-1">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setTracingSale(s); }}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                  style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
-                  title="Ver trazabilidad"
-                >
-                  <GitBranch className="w-3.5 h-3.5" />
-                </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setEditingSale(s); }}
                   className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"

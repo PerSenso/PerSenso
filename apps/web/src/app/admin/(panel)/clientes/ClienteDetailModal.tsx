@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AdminModal } from '@/components/admin/AdminModal';
-import { Phone, MapPin, Hash, Share2 } from 'lucide-react';
+import { Phone, MapPin, Hash, Share2, Copy, Check } from 'lucide-react';
 import type { ClientWithDebt } from '@persenso/shared';
 
 interface Sale {
@@ -29,6 +29,34 @@ interface Props {
 
 function fmt(n: number) { return `$${n.toFixed(2)}`; }
 function fmtDate(d: string) { return new Date(d).toLocaleDateString('es-VE'); }
+
+function CopyId({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(id).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <div className="flex items-center gap-1 mt-0.5">
+      <span className="text-[10px] font-mono" style={{ color: 'var(--ps-gold)' }}>
+        #{id.slice(0, 8)}
+      </span>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="w-4 h-4 flex items-center justify-center rounded transition-opacity hover:opacity-70"
+        title="Copiar ID completo"
+      >
+        {copied
+          ? <Check className="w-3 h-3" style={{ color: 'var(--ps-green)' }} />
+          : <Copy className="w-3 h-3" style={{ color: 'var(--ps-gold)' }} />
+        }
+      </button>
+    </div>
+  );
+}
 
 export function ClienteDetailModal({ client, onClose }: Props) {
   const [detail, setDetail] = useState<ClientDetail | null>(null);
@@ -133,8 +161,9 @@ export function ClienteDetailModal({ client, onClose }: Props) {
                             borderBottom: '1px solid var(--ps-border)',
                             opacity: isAnulada ? 0.5 : 1,
                           }}>
-                          <td className="px-3 py-2.5 tabular-nums" style={{ color: 'var(--ps-text-muted)' }}>
-                            {fmtDate(sale.date)}
+                          <td className="px-3 py-2.5" style={{ color: 'var(--ps-text-muted)' }}>
+                            <div className="tabular-nums">{fmtDate(sale.date)}</div>
+                            <CopyId id={sale.id} />
                           </td>
                           <td className="px-3 py-2.5">
                             <span className="font-medium" style={{ color: 'var(--ps-text)' }}>
