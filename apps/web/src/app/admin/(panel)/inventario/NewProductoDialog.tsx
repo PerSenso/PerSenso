@@ -151,8 +151,17 @@ export function NewProductoDialog({ onClose }: Props) {
           </div>
           <div>
             <label className={labelCls} style={labelStyle}>Concentración</label>
-            <input value={form.concentration} onChange={(e) => set('concentration', e.target.value)}
-              placeholder="EDP, EDT…" className={fieldCls} style={fieldStyle} />
+            <select value={form.concentration} onChange={(e) => set('concentration', e.target.value)}
+              className={fieldCls} style={fieldStyle}>
+              <option value="">— Seleccionar —</option>
+              <option value="EDP">EDP</option>
+              <option value="EDT">EDT</option>
+              <option value="EDC">EDC</option>
+              <option value="Parfum">Parfum</option>
+              <option value="Cologne">Cologne</option>
+              <option value="Mist">Mist</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
 
