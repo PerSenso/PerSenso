@@ -28,7 +28,6 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
   const [form, setForm] = useState({
     name: product.name,
     brand: product.brand ?? '',
-    size: product.size ?? '',
     sizeMl: product.sizeMl ? String(product.sizeMl) : '',
     concentration: product.concentration ?? '',
     gender: product.gender,
@@ -54,7 +53,6 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
         body: JSON.stringify({
           name: form.name,
           brand: form.brand || undefined,
-          size: form.size || undefined,
           sizeMl: form.sizeMl ? Number(form.sizeMl) : undefined,
           concentration: form.concentration || undefined,
           gender: form.gender,
@@ -92,16 +90,10 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
           </div>
         </div>
 
-        {/* Tamaño + ml */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelCls} style={labelStyle}>Tamaño</label>
-            <input value={form.size} onChange={set('size')} placeholder="ej: 100ml" className={fieldCls} style={fieldStyle} />
-          </div>
-          <div>
-            <label className={labelCls} style={labelStyle}>ml (numérico)</label>
-            <input type="number" min="0" value={form.sizeMl} onChange={set('sizeMl')} className={fieldCls} style={fieldStyle} />
-          </div>
+        {/* ml */}
+        <div>
+          <label className={labelCls} style={labelStyle}>Tamaño (ml)</label>
+          <input type="number" min="0" value={form.sizeMl} onChange={set('sizeMl')} className={fieldCls} style={fieldStyle} />
         </div>
 
         {/* Concentración + Género */}
