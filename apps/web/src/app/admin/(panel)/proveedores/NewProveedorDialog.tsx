@@ -12,7 +12,7 @@ export function NewProveedorDialog({ onClose }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ name: '', phone: '', notes: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', notes: '' });
 
   const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -23,6 +23,7 @@ export function NewProveedorDialog({ onClose }: Props) {
     try {
       const body: Record<string, string> = { name: form.name };
       if (form.phone) body.phone = form.phone;
+      if (form.email) body.email = form.email;
       if (form.notes) body.notes = form.notes;
 
       const res = await fetch('/api/admin/suppliers', {
@@ -49,10 +50,17 @@ export function NewProveedorDialog({ onClose }: Props) {
             className={fieldCls} style={fieldStyle} />
         </div>
 
-        <div>
-          <label className={labelCls} style={labelStyle}>Teléfono</label>
-          <input value={form.phone} onChange={(e) => set('phone', e.target.value)}
-            className={fieldCls} style={fieldStyle} />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls} style={labelStyle}>Teléfono</label>
+            <input value={form.phone} onChange={(e) => set('phone', e.target.value)}
+              className={fieldCls} style={fieldStyle} />
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>Email</label>
+            <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)}
+              className={fieldCls} style={fieldStyle} placeholder="proveedor@email.com" />
+          </div>
         </div>
 
         <div>

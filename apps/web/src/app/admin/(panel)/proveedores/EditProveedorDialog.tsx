@@ -17,6 +17,7 @@ export function EditProveedorDialog({ supplier, onClose }: EditProveedorDialogPr
   const [form, setForm] = useState({
     name: supplier.name,
     phone: supplier.phone ?? '',
+    email: supplier.email ?? '',
     notes: supplier.notes ?? '',
   });
 
@@ -34,6 +35,7 @@ export function EditProveedorDialog({ supplier, onClose }: EditProveedorDialogPr
         body: JSON.stringify({
           name: form.name,
           phone: form.phone || undefined,
+          email: form.email || undefined,
           notes: form.notes || undefined,
         }),
       });
@@ -55,9 +57,15 @@ export function EditProveedorDialog({ supplier, onClose }: EditProveedorDialogPr
           <label className={labelCls} style={labelStyle}>Nombre *</label>
           <input required value={form.name} onChange={set('name')} className={fieldCls} style={fieldStyle} />
         </div>
-        <div>
-          <label className={labelCls} style={labelStyle}>Teléfono</label>
-          <input value={form.phone} onChange={set('phone')} className={fieldCls} style={fieldStyle} placeholder="+58 412…" />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls} style={labelStyle}>Teléfono</label>
+            <input value={form.phone} onChange={set('phone')} className={fieldCls} style={fieldStyle} placeholder="+58 412…" />
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>Email</label>
+            <input type="email" value={form.email} onChange={set('email')} className={fieldCls} style={fieldStyle} placeholder="proveedor@email.com" />
+          </div>
         </div>
         <div>
           <label className={labelCls} style={labelStyle}>Notas</label>

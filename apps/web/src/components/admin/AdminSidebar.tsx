@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { href: '/admin/abonos', label: 'Abonos', icon: CreditCard },
   { href: '/admin/saldo', label: 'Saldo / Caja', icon: Wallet },
   { href: '/admin/gastos', label: 'Gastos', icon: Receipt },
-  { href: '/admin/proveedores', label: 'Proveedores', icon: Truck },
+  { href: '/admin/proveedores', label: 'Pedidos', icon: Truck },
   { href: '/admin/reportes', label: 'Reportes', icon: BarChart3 },
   { href: '/admin/trazabilidad', label: 'Trazabilidad', icon: GitBranch },
 ];
