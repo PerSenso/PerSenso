@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -115,19 +119,51 @@ export class OrdersService {
 
   async update(id: string, dto: UpdateOrderDto) {
     await this.findOne(id);
-    return this.prisma.order.update({
-      where: { id },
-      data: {
-        ...(dto.date !== undefined && { date: new Date(dto.date) }),
-        ...(dto.supplierId !== undefined && { supplierId: dto.supplierId }),
-        ...(dto.shippingCost !== undefined && {
-          shippingCost: dto.shippingCost,
-        }),
-        ...(dto.marketingCost !== undefined && {
-          marketingCost: dto.marketingCost,
-        }),
-        ...(dto.notes !== undefined && { notes: dto.notes }),
-      },
+
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.restocks !== undefined) {
+        const existing = await tx.restock.findMany({
+          where: { orderId: id },
+          include: { _count: { select: { sales: true } } },
+        });
+        const locked = existing.filter((r) => r._count.sales > 0);
+        if (locked.length > 0) {
+          throw new BadRequestException(
+            'No se pueden editar productos que ya tienen ventas registradas',
+          );
+        }
+        await tx.restock.deleteMany({ where: { orderId: id } });
+        for (const item of dto.restocks) {
+          await tx.restock.create({
+            data: {
+              orderId: id,
+              productId: item.productId,
+              quantity: item.quantity,
+              baseUnitCost: item.baseUnitCost,
+            },
+          });
+        }
+      }
+
+      return tx.order.update({
+        where: { id },
+        data: {
+          ...(dto.date !== undefined && { date: new Date(dto.date) }),
+          ...(dto.supplierId !== undefined && { supplierId: dto.supplierId }),
+          ...(dto.shippingCost !== undefined && {
+            shippingCost: dto.shippingCost,
+          }),
+          ...(dto.marketingCost !== undefined && {
+            marketingCost: dto.marketingCost,
+          }),
+          ...(dto.notes !== undefined && { notes: dto.notes }),
+        },
+        include: {
+          restocks: { include: { product: true } },
+          fundingEntries: true,
+          supplier: true,
+        },
+      });
     });
   }
 

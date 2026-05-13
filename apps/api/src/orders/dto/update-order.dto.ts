@@ -4,8 +4,12 @@ import {
   IsNumber,
   IsOptional,
   IsDateString,
+  IsArray,
+  ValidateNested,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { RestockLineDto } from './create-order.dto';
 
 export class UpdateOrderDto {
   @IsOptional()
@@ -29,4 +33,10 @@ export class UpdateOrderDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RestockLineDto)
+  restocks?: RestockLineDto[];
 }

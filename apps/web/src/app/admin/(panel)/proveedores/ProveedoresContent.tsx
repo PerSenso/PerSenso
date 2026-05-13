@@ -128,7 +128,7 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
         <EditProveedorDialog supplier={editingSupplier} onClose={() => setEditingSupplier(null)} />
       )}
       {editingOrder && (
-        <EditOrderDialog order={editingOrder} suppliers={suppliers} onClose={() => setEditingOrder(null)} />
+        <EditOrderDialog order={editingOrder} suppliers={suppliers} products={products} onClose={() => setEditingOrder(null)} onSuccess={fetchOrders} />
       )}
 
       {/* ── Pedidos (main feature) ── */}

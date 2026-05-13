@@ -18,8 +18,8 @@ const mockOrder = {
 };
 
 const mockTx = {
-  order: { create: jest.fn(), findUnique: jest.fn() },
-  restock: { create: jest.fn() },
+  order: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+  restock: { create: jest.fn(), findMany: jest.fn(), deleteMany: jest.fn() },
   fundingEntry: { create: jest.fn() },
 };
 
@@ -234,16 +234,57 @@ describe('OrdersService', () => {
   });
 
   describe('update', () => {
-    it('updates order metadata', async () => {
+    const updatedOrder = { ...mockOrder, notes: 'updated' };
+
+    function setupUpdateTx(
+      restocksWithCount: { _count: { sales: number } }[] = [],
+    ) {
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (tx: any) => any) => {
+          mockTx.restock.findMany.mockResolvedValue(restocksWithCount);
+          mockTx.restock.deleteMany.mockResolvedValue({});
+          mockTx.restock.create.mockResolvedValue({});
+          mockTx.order.update.mockResolvedValue(updatedOrder);
+          return fn(mockTx);
+        },
+      );
+    }
+
+    it('updates order metadata without restocks', async () => {
       mockPrisma.order.findUnique.mockResolvedValue(mockOrder);
-      mockPrisma.order.update.mockResolvedValue({
-        ...mockOrder,
-        notes: 'updated',
-      });
+      setupUpdateTx();
 
       const result = await service.update('order-uuid-1', { notes: 'updated' });
 
       expect(result.notes).toBe('updated');
+      expect(mockTx.restock.findMany).not.toHaveBeenCalled();
+    });
+
+    it('replaces restocks when provided', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue(mockOrder);
+      setupUpdateTx([{ _count: { sales: 0 } }]);
+
+      await service.update('order-uuid-1', {
+        restocks: [{ productId: 'prod-1', quantity: 5, baseUnitCost: 20 }],
+      });
+
+      expect(mockTx.restock.deleteMany).toHaveBeenCalledWith({
+        where: { orderId: 'order-uuid-1' },
+      });
+      expect(mockTx.restock.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws BadRequestException when a restock has linked sales', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue(mockOrder);
+      setupUpdateTx([{ _count: { sales: 2 } }]);
+
+      await expect(
+        service.update('order-uuid-1', {
+          restocks: [{ productId: 'prod-1', quantity: 5, baseUnitCost: 20 }],
+        }),
+      ).rejects.toThrow(
+        'No se pueden editar productos que ya tienen ventas registradas',
+      );
     });
 
     it('throws NotFoundException when updating non-existent order', async () => {
