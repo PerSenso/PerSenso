@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
@@ -23,8 +24,20 @@ export class OrdersController {
   constructor(private ordersService: OrdersService) {}
 
   @Get()
-  findAll() {
-    return this.ordersService.findAll();
+  findAll(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('supplierId') supplierId?: string,
+  ) {
+    return this.ordersService.findAll(startDate, endDate, supplierId);
+  }
+
+  @Get('kpis')
+  getKpis(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.ordersService.getKpis(startDate, endDate);
   }
 
   @Get(':id')

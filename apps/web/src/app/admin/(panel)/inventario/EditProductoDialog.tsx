@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
-import type { ProductAdmin } from '@persenso/shared';
+import type { ProductAdmin, SupplierStockEntry } from '@persenso/shared';
 
 interface EditProductoDialogProps {
   product: ProductAdmin;
@@ -17,6 +17,14 @@ const CONCENTRATION_OPTIONS = ['EDP', 'EDT', 'EDC', 'Parfum', 'Cologne', 'Mist',
 export function EditProductoDialog({ product, onClose }: EditProductoDialogProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [suppliers, setSuppliers] = useState<SupplierStockEntry[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/admin/products/${product.id}/suppliers`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setSuppliers(Array.isArray(data) ? data : []))
+      .catch(() => setSuppliers([]));
+  }, [product.id]);
   const [form, setForm] = useState({
     name: product.name,
     brand: product.brand ?? '',
@@ -161,6 +169,52 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
           <label className={labelCls} style={labelStyle}>Notas internas</label>
           <textarea rows={2} value={form.notes} onChange={set('notes')} className={`${fieldCls} resize-none`} style={fieldStyle} />
         </div>
+
+        {/* Lotes por proveedor */}
+        {suppliers.length > 0 && (
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2"
+              style={{ color: 'var(--ps-text-muted)' }}>
+              Lotes por proveedor
+            </p>
+            <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--ps-border)' }}>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr style={{ background: 'var(--ps-surface)' }}>
+                    {['Proveedor', 'Cant.', 'Costo u.', 'Fecha'].map((h) => (
+                      <th key={h} className="px-3 py-2 text-left font-semibold"
+                        style={{ color: 'var(--ps-text-muted)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {suppliers.map((entry, i) => (
+                    <tr key={`${entry.orderId}-${i}`}
+                      style={{ borderTop: '1px solid var(--ps-border)' }}>
+                      <td className="px-3 py-2 font-medium" style={{ color: 'var(--ps-text)' }}>
+                        {entry.supplierName}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums" style={{ color: 'var(--ps-text)' }}>
+                        {entry.quantity}u
+                      </td>
+                      <td className="px-3 py-2 tabular-nums" style={{ color: 'var(--ps-text-muted)' }}>
+                        ${Number(entry.baseUnitCost).toFixed(2)}
+                      </td>
+                      <td className="px-3 py-2" style={{ color: 'var(--ps-text-muted)' }}>
+                        {new Date(entry.date).toLocaleDateString('es-VE')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {suppliers.length > 1 && (
+              <p className="mt-1 text-[10px]" style={{ color: 'var(--ps-text-muted)' }}>
+                {suppliers.length} lotes de {new Set(suppliers.map((s) => s.supplierName)).size} proveedor(es)
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-3 pt-1">
           <button type="button" onClick={onClose}

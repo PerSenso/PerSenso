@@ -36,7 +36,9 @@ export class ProductsService {
     const p = await this.prisma.product.findUnique({
       where: { id },
       include: {
-        restocks: { select: { quantity: true } },
+        restocks: {
+          include: { order: { include: { supplier: true } } },
+        },
         _count: { select: { sales: { where: { status: 'ACTIVA' } } } },
       },
     });
@@ -45,6 +47,21 @@ export class ProductsService {
     const totalRestocked =
       p.restocks?.reduce((sum, r) => sum + r.quantity, 0) ?? 0;
     const totalSold = p._count?.sales ?? 0;
+
+    const restockSummary = (p.restocks ?? [])
+      .sort(
+        (a, b) =>
+          new Date(b.order.date).getTime() - new Date(a.order.date).getTime(),
+      )
+      .map((r) => ({
+        supplierId: r.order.supplierId ?? null,
+        supplierName: r.order.supplier?.name ?? 'Sin proveedor',
+        quantity: r.quantity,
+        baseUnitCost: Number(r.baseUnitCost),
+        orderId: r.orderId,
+        date: r.order.date.toISOString(),
+      }));
+
     const rest = { ...p } as any;
     delete rest.restocks;
     delete rest._count;
@@ -52,7 +69,31 @@ export class ProductsService {
     return {
       ...rest,
       stock: totalRestocked - totalSold,
+      restockSummary,
     };
+  }
+
+  async findSuppliers(id: string) {
+    const exists = await this.prisma.product.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!exists) throw new NotFoundException('Producto no encontrado');
+
+    const restocks = await this.prisma.restock.findMany({
+      where: { productId: id },
+      include: { order: { include: { supplier: true } } },
+      orderBy: { order: { date: 'desc' } },
+    });
+
+    return restocks.map((r) => ({
+      supplierId: r.order.supplierId ?? null,
+      supplierName: r.order.supplier?.name ?? 'Sin proveedor',
+      quantity: r.quantity,
+      baseUnitCost: Number(r.baseUnitCost),
+      orderId: r.orderId,
+      date: r.order.date.toISOString(),
+    }));
   }
 
   async create(dto: CreateProductDto) {

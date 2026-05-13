@@ -13,8 +13,35 @@ const mockProduct = {
   gender: 'HOMBRE',
 };
 
-// findAll/findOne now include restocks + _count to compute stock
+const mockOrder = {
+  date: new Date('2026-01-15'),
+  supplierId: 'sup-1',
+  supplier: { id: 'sup-1', name: 'Proveedor A' },
+};
+
+// findAll uses select:{quantity} only; findOne now includes full restock with order
 const mockProductWithRelations = {
+  ...mockProduct,
+  restocks: [
+    {
+      id: 'r1',
+      quantity: 10,
+      baseUnitCost: 50,
+      orderId: 'o1',
+      order: mockOrder,
+    },
+    {
+      id: 'r2',
+      quantity: 5,
+      baseUnitCost: 60,
+      orderId: 'o2',
+      order: mockOrder,
+    },
+  ],
+  _count: { sales: 3 },
+};
+
+const mockProductForList = {
   ...mockProduct,
   restocks: [{ quantity: 10 }, { quantity: 5 }],
   _count: { sales: 3 },
@@ -27,6 +54,9 @@ const mockPrisma = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+  },
+  restock: {
+    findMany: jest.fn(),
   },
 };
 
@@ -47,7 +77,7 @@ describe('ProductsService', () => {
 
   describe('findAll', () => {
     it('should return products with computed stock', async () => {
-      mockPrisma.product.findMany.mockResolvedValue([mockProductWithRelations]);
+      mockPrisma.product.findMany.mockResolvedValue([mockProductForList]);
 
       const result = await service.findAll();
 
@@ -80,7 +110,7 @@ describe('ProductsService', () => {
   });
 
   describe('findOne', () => {
-    it('should return a product with computed stock', async () => {
+    it('should return a product with computed stock and restockSummary', async () => {
       mockPrisma.product.findUnique.mockResolvedValue(mockProductWithRelations);
 
       const result = await service.findOne('prod-uuid-1');
@@ -89,6 +119,12 @@ describe('ProductsService', () => {
       expect(result.stock).toBe(12);
       expect(result).not.toHaveProperty('_count');
       expect(result).not.toHaveProperty('restocks');
+      expect(Array.isArray(result.restockSummary)).toBe(true);
+      expect(result.restockSummary).toHaveLength(2);
+      expect(result.restockSummary[0]).toMatchObject({
+        supplierName: 'Proveedor A',
+        baseUnitCost: 50,
+      });
     });
 
     it('should return stock = 0 when no restocks exist', async () => {
@@ -145,6 +181,61 @@ describe('ProductsService', () => {
       await expect(
         service.update('missing', { imageUrl: 'url' }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findSuppliers', () => {
+    const mockRestock = {
+      id: 'r1',
+      productId: 'prod-uuid-1',
+      orderId: 'o1',
+      quantity: 10,
+      baseUnitCost: 55,
+      order: {
+        date: new Date('2026-03-01'),
+        supplierId: 'sup-1',
+        supplier: { id: 'sup-1', name: 'Proveedor X' },
+      },
+    };
+
+    it('should return supplier breakdown for a product', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({ id: 'prod-uuid-1' });
+      mockPrisma.restock.findMany.mockResolvedValue([mockRestock]);
+
+      const result = await service.findSuppliers('prod-uuid-1');
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        supplierId: 'sup-1',
+        supplierName: 'Proveedor X',
+        quantity: 10,
+        baseUnitCost: 55,
+        orderId: 'o1',
+      });
+      expect(typeof result[0].date).toBe('string');
+    });
+
+    it('should return "Sin proveedor" when order has no supplier', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue({ id: 'prod-uuid-1' });
+      mockPrisma.restock.findMany.mockResolvedValue([
+        {
+          ...mockRestock,
+          order: { ...mockRestock.order, supplierId: null, supplier: null },
+        },
+      ]);
+
+      const result = await service.findSuppliers('prod-uuid-1');
+
+      expect(result[0].supplierName).toBe('Sin proveedor');
+      expect(result[0].supplierId).toBeNull();
+    });
+
+    it('should throw NotFoundException when product not found', async () => {
+      mockPrisma.product.findUnique.mockResolvedValue(null);
+
+      await expect(service.findSuppliers('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

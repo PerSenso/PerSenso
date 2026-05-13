@@ -150,7 +150,15 @@ export interface CashMovement {
   amount: number;
   date: string;
   notes?: string;
+  owner?: string;
+  paymentMethod?: string;
   createdAt: string;
+}
+
+export interface FundingContribution {
+  investor: string;
+  totalContributed: number;
+  ordersCount: number;
 }
 
 export interface LedgerSummary {
@@ -206,6 +214,25 @@ export interface DashboardTopClient {
   name: string;
   totalPaid: number;
   salesCount: number;
+}
+
+// ── Inventario: multi-proveedor ──────────────────────────────────────────────
+
+export interface SupplierStockEntry {
+  supplierId: string | null;
+  supplierName: string;
+  quantity: number;
+  baseUnitCost: number;
+  orderId: string;
+  date: string;
+}
+
+// ── Proveedores: KPIs ─────────────────────────────────────────────────────────
+
+export interface OrderKpis {
+  totalOrders: number;
+  totalUnits: number;
+  totalInvested: number;
 }
 
 // ── Trazabilidad ─────────────────────────────────────────────────────────────

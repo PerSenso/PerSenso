@@ -42,6 +42,13 @@ export class ProductsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'OWNER')
+  @Get(':id/suppliers')
+  findSuppliers(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productsService.findSuppliers(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'OWNER')
   @Post()
   create(@Body() dto: CreateProductDto) {
     return this.productsService.create(dto);

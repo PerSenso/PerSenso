@@ -23,6 +23,12 @@ const mockTx = {
   fundingEntry: { create: jest.fn() },
 };
 
+const mockOrderWithRelations = {
+  ...mockOrder,
+  restocks: [{ quantity: 5 }, { quantity: 3 }],
+  fundingEntries: [{ amount: 300 }, { amount: 200 }],
+};
+
 const mockPrisma = {
   order: {
     findMany: jest.fn(),
@@ -49,12 +55,87 @@ describe('OrdersService', () => {
   });
 
   describe('findAll', () => {
-    it('returns list of orders', async () => {
+    it('returns list of orders without filters', async () => {
       mockPrisma.order.findMany.mockResolvedValue([mockOrder]);
 
       const result = await service.findAll();
 
       expect(result).toHaveLength(1);
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+    });
+
+    it('applies supplierId filter', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([mockOrder]);
+
+      await service.findAll(undefined, undefined, 'sup-uuid-1');
+
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { supplierId: 'sup-uuid-1' } }),
+      );
+    });
+
+    it('applies startDate filter', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([]);
+
+      await service.findAll('2026-01-01');
+
+      const call = mockPrisma.order.findMany.mock.calls[0][0];
+      expect(call.where.date?.gte).toBeInstanceOf(Date);
+    });
+
+    it('applies endDate filter', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([]);
+
+      await service.findAll(undefined, '2026-12-31');
+
+      const call = mockPrisma.order.findMany.mock.calls[0][0];
+      expect(call.where.date?.lte).toBeInstanceOf(Date);
+    });
+
+    it('applies both date filters simultaneously', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([]);
+
+      await service.findAll('2026-01-01', '2026-12-31');
+
+      const call = mockPrisma.order.findMany.mock.calls[0][0];
+      expect(call.where.date?.gte).toBeInstanceOf(Date);
+      expect(call.where.date?.lte).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('getKpis', () => {
+    it('returns totalOrders, totalUnits and totalInvested', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([mockOrderWithRelations]);
+
+      const result = await service.getKpis();
+
+      expect(result.totalOrders).toBe(1);
+      expect(result.totalUnits).toBe(8); // 5 + 3
+      expect(result.totalInvested).toBe(570); // 50 shippingCost + 20 marketingCost + 300 + 200
+    });
+
+    it('returns zeros when no orders match', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([]);
+
+      const result = await service.getKpis();
+
+      expect(result).toEqual({
+        totalOrders: 0,
+        totalUnits: 0,
+        totalInvested: 0,
+      });
+    });
+
+    it('applies date filters to kpis query', async () => {
+      mockPrisma.order.findMany.mockResolvedValue([]);
+
+      await service.getKpis('2026-01-01', '2026-12-31');
+
+      const call = mockPrisma.order.findMany.mock.calls[0][0];
+      expect(call.where.date?.gte).toBeInstanceOf(Date);
+      expect(call.where.date?.lte).toBeInstanceOf(Date);
     });
   });
 

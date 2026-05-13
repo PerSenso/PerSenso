@@ -7,8 +7,17 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
+  findAll(startDate?: string, endDate?: string, supplierId?: string) {
+    const where: Record<string, any> = {};
+    if (supplierId) where['supplierId'] = supplierId;
+    if (startDate || endDate) {
+      where['date'] = {};
+      if (startDate) where['date'].gte = new Date(startDate);
+      if (endDate) where['date'].lte = new Date(endDate);
+    }
+
     return this.prisma.order.findMany({
+      where,
       include: {
         supplier: true,
         restocks: { include: { product: true } },
@@ -16,6 +25,38 @@ export class OrdersService {
       },
       orderBy: { date: 'desc' },
     });
+  }
+
+  async getKpis(startDate?: string, endDate?: string) {
+    const where: Record<string, any> = {};
+    if (startDate || endDate) {
+      where['date'] = {};
+      if (startDate) where['date'].gte = new Date(startDate);
+      if (endDate) where['date'].lte = new Date(endDate);
+    }
+
+    const orders = await this.prisma.order.findMany({
+      where,
+      include: {
+        restocks: { select: { quantity: true } },
+        fundingEntries: { select: { amount: true } },
+      },
+    });
+
+    const totalOrders = orders.length;
+    const totalUnits = orders.reduce(
+      (sum, o) => sum + o.restocks.reduce((s, r) => s + r.quantity, 0),
+      0,
+    );
+    const totalInvested = orders.reduce((sum, o) => {
+      const funding = o.fundingEntries.reduce(
+        (s, f) => s + Number(f.amount),
+        0,
+      );
+      return sum + Number(o.shippingCost) + Number(o.marketingCost) + funding;
+    }, 0);
+
+    return { totalOrders, totalUnits, totalInvested };
   }
 
   async findOne(id: string) {
