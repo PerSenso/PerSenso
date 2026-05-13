@@ -60,7 +60,12 @@ describe('ReportsService', () => {
     ];
 
     const topClientsRaw = [
-      { clientId: 'c1', name: 'Maria Lopez', total_spent: '1500', sales_count: '3' },
+      {
+        clientId: 'c1',
+        name: 'Maria Lopez',
+        total_spent: '1500',
+        sales_count: '3',
+      },
     ];
 
     const paymentsByMethodRaw = [
@@ -138,7 +143,10 @@ describe('ReportsService', () => {
       setupMocks();
       const result = await service.getSummary(undefined, undefined);
 
-      const totalRevenue = result.salesByMonth.reduce((acc, m) => acc + m.revenue, 0);
+      const totalRevenue = result.salesByMonth.reduce(
+        (acc, m) => acc + m.revenue,
+        0,
+      );
       expect(totalRevenue).toBe(2400);
     });
 
@@ -165,7 +173,12 @@ describe('ReportsService', () => {
 
     it('handles null profit gracefully', async () => {
       const rawWithNullProfit = [
-        { month: new Date('2026-01-01'), sales_count: '2', revenue: '500', profit: null as unknown as string },
+        {
+          month: new Date('2026-01-01'),
+          sales_count: '2',
+          revenue: '500',
+          profit: null as unknown as string,
+        },
       ];
       setupMocks(rawWithNullProfit);
       const result = await service.getSummary(undefined, undefined);

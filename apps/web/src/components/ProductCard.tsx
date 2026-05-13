@@ -53,7 +53,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     >
       {/* Image */}
       <div
-        className="aspect-[3/4] flex items-center justify-center overflow-hidden relative"
+        className="aspect-square flex items-center justify-center overflow-hidden relative"
         style={{ background: "var(--ps-surface)" }}
       >
         {(isCritical || isWarning) && product.stock > 0 && (

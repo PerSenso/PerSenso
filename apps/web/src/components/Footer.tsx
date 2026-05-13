@@ -1,5 +1,4 @@
-const WHATSAPP_NUMBER = "584146033113";
-const INSTAGRAM_URL = "https://www.instagram.com/persensovzla?igsh=MmhrYTA4bHJjY2Jt";
+import { WHATSAPP_URL, INSTAGRAM_URL } from "@/lib/social";
 
 const Footer = () => (
   <footer
@@ -21,7 +20,7 @@ const Footer = () => (
 
       <div className="flex items-center justify-center gap-3 mb-8">
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white text-xs uppercase tracking-wider rounded-full hover:brightness-110 transition-all duration-300 font-semibold hover:scale-105"

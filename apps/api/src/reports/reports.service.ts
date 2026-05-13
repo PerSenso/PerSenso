@@ -30,16 +30,22 @@ export class ReportsService {
       ? Prisma.sql`JOIN "Sale" sf ON sf.id = p."saleId" WHERE sf.date >= ${start} AND sf.date <= ${endEod}`
       : Prisma.sql``;
 
-    const [salesByMonth, topProducts, totalsRow, marginByProduct, topClients, paymentsByMethod] =
-      await Promise.all([
-        this.prisma.$queryRaw<
-          {
-            month: Date;
-            sales_count: string;
-            revenue: string;
-            profit: string;
-          }[]
-        >`
+    const [
+      salesByMonth,
+      topProducts,
+      totalsRow,
+      marginByProduct,
+      topClients,
+      paymentsByMethod,
+    ] = await Promise.all([
+      this.prisma.$queryRaw<
+        {
+          month: Date;
+          sales_count: string;
+          revenue: string;
+          profit: string;
+        }[]
+      >`
           SELECT
             DATE_TRUNC('month', date) AS month,
             COUNT(*) AS sales_count,
@@ -51,14 +57,14 @@ export class ReportsService {
           ORDER BY month DESC
           LIMIT 12
         `,
-        this.prisma.$queryRaw<
-          {
-            name: string;
-            sales_count: string;
-            revenue: string;
-            avg_margin: string;
-          }[]
-        >`
+      this.prisma.$queryRaw<
+        {
+          name: string;
+          sales_count: string;
+          revenue: string;
+          avg_margin: string;
+        }[]
+      >`
           SELECT
             p.name,
             COUNT(s.id) AS sales_count,
@@ -70,12 +76,14 @@ export class ReportsService {
           GROUP BY p.id, p.name
           ORDER BY SUM(s.total) DESC
         `,
-        this.prisma.$queryRaw<{ total_revenue: string; total_collected: string }[]>`
+      this.prisma.$queryRaw<
+        { total_revenue: string; total_collected: string }[]
+      >`
           SELECT
             (SELECT COALESCE(SUM(total), 0) FROM "Sale" ${debtSaleFilter}) AS total_revenue,
             (SELECT COALESCE(SUM(p.amount), 0) FROM "Payment" p ${debtPayFilter}) AS total_collected
         `,
-        this.prisma.$queryRaw<{ name: string; avg_margin_pct: string }[]>`
+      this.prisma.$queryRaw<{ name: string; avg_margin_pct: string }[]>`
           SELECT
             p.name,
             AVG(s."marginPctAtSale") AS avg_margin_pct
@@ -85,9 +93,14 @@ export class ReportsService {
           GROUP BY p.id, p.name
           ORDER BY AVG(s."marginPctAtSale") DESC
         `,
-        this.prisma.$queryRaw<
-          { clientId: string; name: string; total_spent: string; sales_count: string }[]
-        >`
+      this.prisma.$queryRaw<
+        {
+          clientId: string;
+          name: string;
+          total_spent: string;
+          sales_count: string;
+        }[]
+      >`
           SELECT
             c.id AS "clientId",
             c.name,
@@ -100,7 +113,7 @@ export class ReportsService {
           ORDER BY SUM(s.total) DESC
           LIMIT 10
         `,
-        this.prisma.$queryRaw<{ method: string; total: string; count: string }[]>`
+      this.prisma.$queryRaw<{ method: string; total: string; count: string }[]>`
           SELECT
             p."paymentMethod" AS method,
             SUM(p.amount) AS total,
@@ -110,7 +123,7 @@ export class ReportsService {
           GROUP BY p."paymentMethod"
           ORDER BY SUM(p.amount) DESC
         `,
-      ]);
+    ]);
 
     const totalRevenue = Number(totalsRow[0]?.total_revenue ?? 0);
     const totalCollected = Number(totalsRow[0]?.total_collected ?? 0);
