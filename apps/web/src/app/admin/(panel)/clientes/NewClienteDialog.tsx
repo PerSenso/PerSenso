@@ -12,7 +12,7 @@ export function NewClienteDialog({ onClose }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ name: '', ci: '', phone: '', address: '', notes: '' });
+  const [form, setForm] = useState({ name: '', ci: '', phone: '', address: '', notes: '', source: '' });
 
   const set = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -21,11 +21,12 @@ export function NewClienteDialog({ onClose }: Props) {
     setError('');
     setLoading(true);
     try {
-      const body: Record<string, string> = { name: form.name };
-      if (form.ci) body.ci = form.ci;
-      if (form.phone) body.phone = form.phone;
-      if (form.address) body.address = form.address;
-      if (form.notes) body.notes = form.notes;
+      const body: Record<string, string> = { name: form.name.trim() };
+      if (form.ci.trim()) body.ci = form.ci.trim();
+      if (form.phone.trim()) body.phone = form.phone.trim();
+      if (form.address.trim()) body.address = form.address.trim();
+      if (form.notes.trim()) body.notes = form.notes.trim();
+      if (form.source) body.source = form.source;
 
       const res = await fetch('/api/admin/clients', {
         method: 'POST',
@@ -70,10 +71,23 @@ export function NewClienteDialog({ onClose }: Props) {
             className={fieldCls} style={fieldStyle} />
         </div>
 
-        <div>
-          <label className={labelCls} style={labelStyle}>Notas</label>
-          <textarea rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)}
-            className="w-full px-3 py-2.5 rounded-lg text-sm resize-none" style={fieldStyle} />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls} style={labelStyle}>¿De dónde viene?</label>
+            <select value={form.source} onChange={(e) => set('source', e.target.value)}
+              className={fieldCls} style={fieldStyle}>
+              <option value="">— Seleccionar —</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Referido">Referido</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>Notas</label>
+            <textarea rows={1} value={form.notes} onChange={(e) => set('notes', e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg text-sm resize-none" style={fieldStyle} />
+          </div>
         </div>
 
         {error && <p className="text-xs" style={{ color: 'var(--ps-red)' }}>{error}</p>}
