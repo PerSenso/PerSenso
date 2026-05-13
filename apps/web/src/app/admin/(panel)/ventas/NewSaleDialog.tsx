@@ -1,11 +1,144 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { X, Paperclip } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Paperclip, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import type { Client, ProductAdmin } from '@persenso/shared';
+
+interface ComboboxOption {
+  value: string;
+  label: string;
+  sublabel?: string;
+  disabled?: boolean;
+}
+
+interface ComboboxProps {
+  options: ComboboxOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
+
+function Combobox({ options, value, onChange, placeholder }: ComboboxProps) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = options.find((o) => o.value === value);
+
+  const filtered =
+    query.length === 0
+      ? options
+      : options.filter(
+          (o) =>
+            o.label.toLowerCase().includes(query.toLowerCase()) ||
+            o.sublabel?.toLowerCase().includes(query.toLowerCase()),
+        );
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleSelect = (opt: ComboboxOption) => {
+    if (opt.disabled) return;
+    onChange(opt.value);
+    setOpen(false);
+    setQuery('');
+  };
+
+  const handleFocus = () => {
+    setOpen(true);
+    setQuery('');
+  };
+
+  const displayValue = open ? query : (selected?.label ?? '');
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={displayValue}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!open) setOpen(true);
+            if (e.target.value === '') onChange('');
+          }}
+          onFocus={handleFocus}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="w-full px-3 py-2.5 pr-8 rounded-lg text-sm outline-none"
+          style={{
+            background: 'var(--ps-input-bg)',
+            border: `1px solid ${open ? 'var(--ps-gold)' : 'var(--ps-input-border)'}`,
+            color: 'var(--ps-input-text)',
+          }}
+        />
+        <ChevronDown
+          className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          style={{ color: 'var(--ps-text-muted)' }}
+        />
+      </div>
+
+      {open && (
+        <div
+          className="absolute z-50 w-full mt-1 rounded-lg overflow-hidden"
+          style={{
+            background: 'var(--ps-surface)',
+            border: '1px solid var(--ps-border)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          <div className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-3 text-xs text-center" style={{ color: 'var(--ps-text-muted)' }}>
+                Sin resultados
+              </div>
+            ) : (
+              filtered.map((opt) => (
+                <div
+                  key={opt.value}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSelect(opt)}
+                  className="px-3 py-2.5 text-sm transition-colors"
+                  style={{
+                    cursor: opt.disabled ? 'not-allowed' : 'pointer',
+                    opacity: opt.disabled ? 0.4 : 1,
+                    color: opt.value === value ? 'var(--ps-gold)' : 'var(--ps-text)',
+                    background: opt.value === value ? 'rgba(201,168,76,0.08)' : 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!opt.disabled) (e.currentTarget as HTMLDivElement).style.background = 'var(--ps-surface-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background =
+                      opt.value === value ? 'rgba(201,168,76,0.08)' : 'transparent';
+                  }}
+                >
+                  <div className="font-medium">{opt.label}</div>
+                  {opt.sublabel && (
+                    <div className="text-[11px] mt-0.5" style={{ color: 'var(--ps-text-muted)' }}>
+                      {opt.sublabel}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface NewSaleDialogProps {
   clients: Client[];
@@ -29,12 +162,26 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
   });
 
   const selectedProduct = products.find((p) => p.id === form.productId);
-  const sortedProducts = [...products].sort(
-    (a, b) => Number((b.stock ?? 0) > 0) - Number((a.stock ?? 0) > 0),
-  );
+
+  const clientOptions: ComboboxOption[] = clients.map((c) => ({
+    value: c.id,
+    label: c.name,
+    sublabel: [c.ci ? `CI: ${c.ci}` : null, c.phone ? `Tel: ${c.phone}` : null].filter(Boolean).join(' · ') || undefined,
+  }));
+
+  const productOptions: ComboboxOption[] = [...products]
+    .sort((a, b) => Number((b.stock ?? 0) > 0) - Number((a.stock ?? 0) > 0))
+    .map((p) => ({
+      value: p.id,
+      label: p.name,
+      sublabel: `${p.brand ? `${p.brand} · ` : ''}$${Number(p.salePrice).toFixed(2)} · ${(p.stock ?? 0) > 0 ? `Stock: ${p.stock}` : 'Sin stock'}`,
+      disabled: (p.stock ?? 0) <= 0,
+    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.clientId) { toast.error('Selecciona un cliente'); return; }
+    if (!form.productId) { toast.error('Selecciona un producto'); return; }
     setLoading(true);
 
     try {
@@ -109,18 +256,12 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
             <label className="text-[10px] font-bold uppercase tracking-widest mb-1.5 block" style={{ color: 'var(--ps-text-muted)' }}>
               Cliente
             </label>
-            <select
+            <Combobox
+              options={clientOptions}
               value={form.clientId}
-              onChange={(e) => setForm({ ...form, clientId: e.target.value })}
-              required
-              className="w-full px-3 py-2.5 rounded-lg text-sm"
-              style={{ background: 'var(--ps-input-bg)', border: '1px solid var(--ps-input-border)', color: 'var(--ps-input-text)' }}
-            >
-              <option value="">Seleccionar cliente</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setForm({ ...form, clientId: v })}
+              placeholder="Buscar cliente..."
+            />
           </div>
 
           {/* Product */}
@@ -128,30 +269,19 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
             <label className="text-[10px] font-bold uppercase tracking-widest mb-1.5 block" style={{ color: 'var(--ps-text-muted)' }}>
               Producto
             </label>
-            <select
+            <Combobox
+              options={productOptions}
               value={form.productId}
-              onChange={(e) => {
-                const product = products.find((p) => p.id === e.target.value);
+              onChange={(v) => {
+                const product = products.find((p) => p.id === v);
                 setForm({
                   ...form,
-                  productId: e.target.value,
+                  productId: v,
                   total: product ? String(product.salePrice) : form.total,
                 });
               }}
-              required
-              className="w-full px-3 py-2.5 rounded-lg text-sm"
-              style={{ background: 'var(--ps-input-bg)', border: '1px solid var(--ps-input-border)', color: 'var(--ps-input-text)' }}
-            >
-              <option value="">Seleccionar producto</option>
-                {sortedProducts.map((p) => {
-                  const inStock = (p.stock ?? 0) > 0;
-                  return (
-                    <option key={p.id} value={p.id} disabled={!inStock}>
-                      {p.name} {p.brand ? `— ${p.brand}` : ''} (${Number(p.salePrice).toFixed(2)}) [{inStock ? `Stock: ${p.stock}` : 'Sin stock'}]
-                    </option>
-                  );
-                })}
-            </select>
+              placeholder="Buscar producto..."
+            />
             {selectedProduct && (
               <p className="text-xs mt-1" style={{ color: 'var(--ps-text-muted)' }}>
                 Precio sugerido: ${Number(selectedProduct.salePrice).toFixed(2)}
@@ -204,7 +334,7 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
             />
           </div>
 
-          {/* Initial payment section */}
+          {/* Initial payment */}
           <div className="pt-2" style={{ borderTop: '1px solid var(--ps-border)' }}>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--ps-text-muted)' }}>
               Pago Inicial (opcional)
