@@ -46,7 +46,7 @@ export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
         body: JSON.stringify({
           total: Number(form.total),
           date: new Date(form.date).toISOString(),
-          notes: form.notes || undefined,
+          notes: form.notes || null,
         }),
       });
 
