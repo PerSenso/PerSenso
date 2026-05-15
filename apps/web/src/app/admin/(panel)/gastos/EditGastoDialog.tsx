@@ -7,12 +7,13 @@ import type { CashMovement } from '@persenso/shared';
 
 interface Props {
   movement: CashMovement;
+  socios: string[];
   onClose: () => void;
 }
 
 const METHODS = ['efectivo', 'pago_movil', 'transferencia', 'zelle', 'binance'];
 
-export function EditGastoDialog({ movement, onClose }: Props) {
+export function EditGastoDialog({ movement, socios, onClose }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -94,9 +95,15 @@ export function EditGastoDialog({ movement, onClose }: Props) {
 
         <div>
           <label className={labelCls} style={labelStyle}>¿Quién? (Socio)</label>
-          <input value={form.owner} onChange={(e) => set('owner', e.target.value)}
-            placeholder="Ej: Carlos, Beto, PerSenso…"
-            className={fieldCls} style={fieldStyle} />
+          <select value={form.owner} onChange={(e) => set('owner', e.target.value)}
+            className={fieldCls} style={fieldStyle}>
+            <option value="">— Sin asignar —</option>
+            {socios.map((s) => <option key={s} value={s}>{s}</option>)}
+            {/* Si el valor actual no está en la lista, mostrarlo igual */}
+            {form.owner && !socios.includes(form.owner) && (
+              <option value={form.owner}>{form.owner}</option>
+            )}
+          </select>
         </div>
 
         <div>

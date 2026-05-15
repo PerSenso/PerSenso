@@ -15,13 +15,14 @@ import { EditGastoDialog } from './EditGastoDialog';
 interface GastosContentProps {
   gastos: CashMovement[];
   totalGastos: number;
+  socios: string[];
 }
 
 function formatCurrency(amount: number): string {
   return `$${Number(amount).toFixed(2)}`;
 }
 
-export function GastosContent({ gastos, totalGastos }: GastosContentProps) {
+export function GastosContent({ gastos, totalGastos, socios }: GastosContentProps) {
   const router = useRouter();
   const [showNew, setShowNew] = useState(false);
   const [editing, setEditing] = useState<CashMovement | null>(null);
@@ -61,8 +62,8 @@ export function GastosContent({ gastos, totalGastos }: GastosContentProps) {
           </button>
         }
       />
-      {showNew && <NewGastoDialog onClose={() => setShowNew(false)} />}
-      {editing && <EditGastoDialog movement={editing} onClose={() => setEditing(null)} />}
+      {showNew && <NewGastoDialog socios={socios} onClose={() => setShowNew(false)} />}
+      {editing && <EditGastoDialog movement={editing} socios={socios} onClose={() => setEditing(null)} />}
 
       {/* Delete confirmation modal */}
       {deleting && (

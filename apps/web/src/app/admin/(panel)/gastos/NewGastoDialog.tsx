@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
 
 interface Props {
+  socios: string[];
   onClose: () => void;
 }
 
 const METHODS = ['efectivo', 'pago_movil', 'transferencia', 'zelle', 'binance'];
 
-export function NewGastoDialog({ onClose }: Props) {
+export function NewGastoDialog({ socios, onClose }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -53,7 +54,7 @@ export function NewGastoDialog({ onClose }: Props) {
         <div>
           <label className={labelCls} style={labelStyle}>Fuente / Concepto *</label>
           <input required value={form.source} onChange={(e) => set('source', e.target.value)}
-            placeholder="Ej: Proveedor, Alquiler…"
+            placeholder="Ej: Reposición inventario, Envío, Publicidad…"
             className={fieldCls} style={fieldStyle} />
         </div>
 
@@ -81,9 +82,11 @@ export function NewGastoDialog({ onClose }: Props) {
 
         <div>
           <label className={labelCls} style={labelStyle}>¿Quién? (Socio)</label>
-          <input value={form.owner} onChange={(e) => set('owner', e.target.value)}
-            placeholder="Ej: Carlos, Beto, PerSenso…"
-            className={fieldCls} style={fieldStyle} />
+          <select value={form.owner} onChange={(e) => set('owner', e.target.value)}
+            className={fieldCls} style={fieldStyle}>
+            <option value="">— Sin asignar —</option>
+            {socios.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
 
         <div>

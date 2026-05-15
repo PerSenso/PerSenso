@@ -32,6 +32,7 @@ function InvestorAvatar({ name }: { name: string }) {
 
 export function SaldoContent({ ledger, contributions }: SaldoContentProps) {
   const router = useRouter();
+  const socios = contributions.map((c) => c.investor);
   const [editing, setEditing] = useState<CashMovement | null>(null);
   const [deleting, setDeleting] = useState<CashMovement | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -60,7 +61,7 @@ export function SaldoContent({ ledger, contributions }: SaldoContentProps) {
     <>
       <AdminPageHeader title="Saldo / Caja" subtitle="Control de ingresos y egresos" />
 
-      {editing && <EditMovementDialog movement={editing} onClose={() => setEditing(null)} />}
+      {editing && <EditMovementDialog movement={editing} socios={socios} onClose={() => setEditing(null)} />}
 
       {deleting && (
         <AdminModal title="Eliminar Movimiento" onClose={() => setDeleting(null)}>
