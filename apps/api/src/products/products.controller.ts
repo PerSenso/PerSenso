@@ -93,7 +93,11 @@ export class ProductsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('Se requiere una imagen');
+    const product = await this.productsService.findOne(id);
+    const oldImageUrl = product.imageUrl;
     const url = await this.storageService.upload(file.buffer, 'products');
-    return this.productsService.update(id, { imageUrl: url });
+    const updated = await this.productsService.update(id, { imageUrl: url });
+    if (oldImageUrl) await this.storageService.delete(oldImageUrl);
+    return updated;
   }
 }

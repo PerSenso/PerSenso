@@ -24,4 +24,20 @@ export class StorageService {
         .end(buffer);
     });
   }
+
+  async delete(url: string): Promise<void> {
+    try {
+      // URL format: https://res.cloudinary.com/{cloud}/image/upload/[v{n}/]{public_id}.{ext}
+      const uploadIdx = url.indexOf('/upload/');
+      if (uploadIdx === -1) return;
+
+      let segment = url.slice(uploadIdx + '/upload/'.length);
+      segment = segment.replace(/^v\d+\//, ''); // strip optional version prefix
+      const publicId = segment.replace(/\.[^./]+$/, ''); // strip file extension
+
+      await cloudinary.uploader.destroy(publicId);
+    } catch {
+      // silent — imagen puede ya no existir
+    }
+  }
 }

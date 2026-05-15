@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
@@ -17,6 +18,8 @@ const CONCENTRATION_OPTIONS = ['EDP', 'EDT', 'EDC', 'Parfum', 'Cologne', 'Mist',
 export function EditProductoDialog({ product, onClose }: EditProductoDialogProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(product.imageUrl ?? null);
+  const [imageUploading, setImageUploading] = useState(false);
   const [suppliers, setSuppliers] = useState<SupplierStockEntry[]>([]);
 
   useEffect(() => {
@@ -160,6 +163,62 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
         <div>
           <label className={labelCls} style={labelStyle}>Notas internas</label>
           <textarea rows={2} value={form.notes} onChange={set('notes')} className={`${fieldCls} resize-none`} style={fieldStyle} />
+        </div>
+
+        {/* Imagen */}
+        <div>
+          <label className={labelCls} style={labelStyle}>Foto del producto</label>
+          <div className="flex items-center gap-3 mt-1">
+            <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0"
+              style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
+              {imageUrl ? (
+                <Image src={imageUrl} alt="Producto" fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xl">📷</div>
+              )}
+              {imageUploading && (
+                <div className="absolute inset-0 flex items-center justify-center"
+                  style={{ background: 'rgba(0,0,0,0.5)' }}>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+            <label className="cursor-pointer">
+              <span className="px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+                style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', color: 'var(--ps-text-muted)' }}>
+                {imageUploading ? 'Subiendo…' : imageUrl ? 'Cambiar foto' : 'Subir foto'}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={imageUploading}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setImageUploading(true);
+                  try {
+                    const fd = new FormData();
+                    fd.append('image', file);
+                    const res = await fetch(`/api/admin/products/${product.id}/image`, {
+                      method: 'POST',
+                      body: fd,
+                    });
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    setImageUrl(data.imageUrl ?? data.url ?? null);
+                    toast.success('Foto actualizada');
+                    router.refresh();
+                  } catch {
+                    toast.error('Error al subir la imagen');
+                  } finally {
+                    setImageUploading(false);
+                    e.target.value = '';
+                  }
+                }}
+              />
+            </label>
+          </div>
         </div>
 
         {/* Lotes por proveedor */}
