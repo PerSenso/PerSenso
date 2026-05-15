@@ -39,11 +39,11 @@ export class ClientsService {
         c."createdAt",
         c."updatedAt",
         COALESCE(
-          (SELECT SUM(s.total) FROM "Sale" s WHERE s."clientId" = c.id), 0
+          (SELECT SUM(s.total) FROM "Sale" s WHERE s."clientId" = c.id AND s.status = 'ACTIVA'), 0
         ) - COALESCE(
           (SELECT SUM(p.amount) FROM "Payment" p
            JOIN "Sale" s2 ON p."saleId" = s2.id
-           WHERE s2."clientId" = c.id), 0
+           WHERE s2."clientId" = c.id AND s2.status = 'ACTIVA'), 0
         ) AS debt
       FROM "Client" c
       ORDER BY c.name ASC
@@ -72,6 +72,7 @@ export class ClientsService {
       where: { id },
       include: {
         sales: {
+          where: { status: 'ACTIVA' },
           include: {
             product: { select: { id: true, name: true, brand: true } },
             payments: { orderBy: { date: 'asc' } },
@@ -102,7 +103,7 @@ export class ClientsService {
         COALESCE(SUM(s.total), 0) - COALESCE(SUM(p.amount), 0) AS debt
       FROM "Sale" s
       LEFT JOIN "Payment" p ON p."saleId" = s.id
-      WHERE s."clientId" = ${clientId}
+      WHERE s."clientId" = ${clientId} AND s.status = 'ACTIVA'
     `;
     return { clientId, debt: Number(result[0]?.debt ?? 0) };
   }
