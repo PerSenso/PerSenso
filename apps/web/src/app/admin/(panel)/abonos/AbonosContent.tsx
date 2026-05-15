@@ -180,22 +180,22 @@ export function AbonosContent({ salesWithDebt }: AbonosContentProps) {
           {
             key: '_actions', header: '',
             render: (s) => (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 whitespace-nowrap">
                 <button
                   onClick={(e) => { e.stopPropagation(); setHistorialSale(s); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
                   style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}
                   title="Ver historial de abonos"
                 >
-                  <List className="w-3.5 h-3.5" />
+                  <List className="w-3.5 h-3.5 flex-shrink-0" />
                   Historial
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setAbonarSale(s); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest btn-gold"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest btn-gold whitespace-nowrap"
                   title="Registrar abono"
                 >
-                  <CreditCard className="w-3.5 h-3.5" />
+                  <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
                   Abonar
                 </button>
               </div>
