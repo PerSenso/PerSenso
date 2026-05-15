@@ -2,17 +2,22 @@ import {
   Injectable,
   UnauthorizedException,
   ForbiddenException,
+  Inject,
+  Optional,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
+import type Redis from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.module';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    @Optional() @Inject(REDIS_CLIENT) private readonly redis: Redis | null,
   ) {}
 
   async login(username: string, password: string) {
@@ -66,8 +71,18 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(userId: string) {
+  async logout(userId: string, jti?: string) {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
+    // Add access token to blacklist so it's rejected immediately even before expiry
+    if (this.redis && jti) {
+      const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
+      await this.redis.set(
+        `blacklist:${jti}`,
+        '1',
+        'EX',
+        ACCESS_TOKEN_TTL_SECONDS,
+      );
+    }
   }
 
   private async generateTokens(userId: string, role: string) {

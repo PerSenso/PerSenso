@@ -57,8 +57,8 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const user = req.user as { id: string };
-    await this.authService.logout(user.id);
+    const user = req.user as { id: string; jti?: string };
+    await this.authService.logout(user.id, user.jti);
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
     return { message: 'Sesión cerrada' };

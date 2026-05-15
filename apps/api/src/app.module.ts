@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
+import Redis from 'ioredis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -16,10 +18,23 @@ import { LedgerModule } from './ledger/ledger.module';
 import { ReportsModule } from './reports/reports.module';
 import { TraceModule } from './trace/trace.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { UsersModule } from './users/users.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRootAsync({
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL;
+        return {
+          throttlers: [{ ttl: 60000, limit: 100 }],
+          ...(redisUrl
+            ? { storage: new ThrottlerStorageRedisService(new Redis(redisUrl)) }
+            : {}),
+        };
+      },
+    }),
+    RedisModule,
     PrismaModule,
     AuthModule,
     ProductsModule,
@@ -33,6 +48,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ReportsModule,
     TraceModule,
     DashboardModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

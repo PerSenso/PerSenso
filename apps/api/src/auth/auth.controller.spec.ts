@@ -98,12 +98,12 @@ describe('AuthController', () => {
   describe('logout', () => {
     it('should clear cookies and call logout service', async () => {
       mockAuthService.logout.mockResolvedValue(undefined);
-      const req = { user: { id: 'user-id' } };
+      const req = { user: { id: 'user-id', jti: undefined } };
       const res = mockResponse();
 
       const result = await controller.logout(req as any, res as any);
 
-      expect(mockAuthService.logout).toHaveBeenCalledWith('user-id');
+      expect(mockAuthService.logout).toHaveBeenCalledWith('user-id', undefined);
       expect(res.clearCookie).toHaveBeenCalledWith('access_token');
       expect(res.clearCookie).toHaveBeenCalledWith('refresh_token');
       expect(result).toEqual({ message: 'Sesión cerrada' });
