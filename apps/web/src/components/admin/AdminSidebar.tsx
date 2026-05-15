@@ -18,12 +18,13 @@ import {
   ChevronLeft,
   Sun,
   Moon,
+  UserCog,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { logout } from '@/app/admin/login/actions';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/ventas', label: 'Ventas', icon: ShoppingCart },
   { href: '/admin/inventario', label: 'Inventario', icon: Package },
@@ -36,16 +37,32 @@ const NAV_ITEMS = [
   { href: '/admin/trazabilidad', label: 'Trazabilidad', icon: GitBranch },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  mobileOpen?: boolean;
+  setMobileOpen?: (open: boolean) => void;
+  role?: string | null;
+}
+
+export function AdminSidebar({ mobileOpen = false, setMobileOpen, role }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  const NAV_ITEMS = role === 'OWNER'
+    ? [...BASE_NAV_ITEMS, { href: '/admin/usuarios', label: 'Usuarios', icon: UserCog }]
+    : BASE_NAV_ITEMS;
 
   return (
     <motion.nav
       animate={{ width: collapsed ? 72 : 256 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="sidebar-persenso flex flex-col h-screen sticky top-0 overflow-hidden"
+      className={[
+        'sidebar-persenso flex-col h-screen overflow-hidden',
+        // Desktop: always visible, sticky in normal flow
+        'md:flex md:sticky md:top-0',
+        // Mobile: drawer overlay when open, hidden when closed
+        mobileOpen ? 'flex fixed inset-y-0 left-0 z-50' : 'hidden',
+      ].join(' ')}
     >
       {/* Header */}
       <div className="p-4 flex items-center justify-between min-h-[64px]">
@@ -100,6 +117,7 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setMobileOpen?.(false)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 relative group"
               style={{
                 color: isActive ? 'var(--ps-gold)' : 'var(--ps-text-soft)',
