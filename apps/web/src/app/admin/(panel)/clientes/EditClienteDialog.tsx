@@ -20,9 +20,10 @@ export function EditClienteDialog({ client, onClose }: EditClienteDialogProps) {
     phone: client.phone ?? '',
     address: client.address ?? '',
     notes: client.notes ?? '',
+    source: (client as { source?: string }).source ?? '',
   });
 
-  const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,6 +39,7 @@ export function EditClienteDialog({ client, onClose }: EditClienteDialogProps) {
           phone: form.phone || undefined,
           address: form.address || undefined,
           notes: form.notes || undefined,
+          source: form.source || undefined,
         }),
       });
       if (!res.ok) throw new Error();
@@ -65,16 +67,35 @@ export function EditClienteDialog({ client, onClose }: EditClienteDialogProps) {
           </div>
           <div>
             <label className={labelCls} style={labelStyle}>Teléfono</label>
-            <input value={form.phone} onChange={set('phone')} className={fieldCls} style={fieldStyle} placeholder="+58 412…" />
+            <div className="flex">
+              <span className="flex items-center px-3 rounded-l-lg text-sm font-medium select-none"
+                style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRight: 'none', color: 'var(--ps-text-muted)' }}>
+                +58
+              </span>
+              <input value={form.phone} onChange={set('phone')} placeholder="412-0000000"
+                className={fieldCls} style={{ ...fieldStyle, borderRadius: '0 8px 8px 0' }} />
+            </div>
           </div>
         </div>
         <div>
           <label className={labelCls} style={labelStyle}>Dirección</label>
           <input value={form.address} onChange={set('address')} className={fieldCls} style={fieldStyle} />
         </div>
-        <div>
-          <label className={labelCls} style={labelStyle}>Notas</label>
-          <textarea rows={3} value={form.notes} onChange={set('notes')} className={`${fieldCls} resize-none`} style={fieldStyle} />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls} style={labelStyle}>¿De dónde viene?</label>
+            <select value={form.source} onChange={set('source')} className={fieldCls} style={fieldStyle}>
+              <option value="">— Seleccionar —</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Referido">Referido</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>Notas</label>
+            <textarea rows={1} value={form.notes} onChange={set('notes')} className={`${fieldCls} resize-none`} style={fieldStyle} />
+          </div>
         </div>
 
         <div className="flex gap-3 pt-1">

@@ -60,8 +60,15 @@ export function NewClienteDialog({ onClose }: Props) {
           </div>
           <div>
             <label className={labelCls} style={labelStyle}>Teléfono</label>
-            <input value={form.phone} onChange={(e) => set('phone', e.target.value)}
-              className={fieldCls} style={fieldStyle} />
+            <div className="flex">
+              <span className="flex items-center px-3 rounded-l-lg text-sm font-medium select-none"
+                style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', borderRight: 'none', color: 'var(--ps-text-muted)' }}>
+                +58
+              </span>
+              <input value={form.phone} onChange={(e) => set('phone', e.target.value)}
+                placeholder="412-0000000"
+                className={fieldCls} style={{ ...fieldStyle, borderRadius: '0 8px 8px 0' }} />
+            </div>
           </div>
         </div>
 
