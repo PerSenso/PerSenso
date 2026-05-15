@@ -196,6 +196,16 @@ export const api = {
       apiFetch<import('@persenso/shared').ReportsSummary>('/reports/summary'),
   },
 
+  // Users (OWNER only)
+  users: {
+    list: () => apiFetch<{ id: string; username: string; role: string; createdAt: string }[]>('/users'),
+    create: (data: { username: string; password: string; role: 'ADMIN' | 'OWNER' }) =>
+      apiFetch<{ id: string; username: string; role: string; createdAt: string }>('/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+
   // Dashboard
   dashboard: {
     debts: (startDate?: string, endDate?: string) => {
