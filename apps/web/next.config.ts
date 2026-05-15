@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["*.ngrok-free.dev", "*.ngrok.io", "*.ngrok.app"],
@@ -48,7 +49,7 @@ const nextConfig: NextConfig = {
               process.env.NODE_ENV === 'production'
                 ? "script-src 'self' 'unsafe-inline'"
                 : "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              `connect-src 'self' ${apiUrl} https://wa.me`,
+              `connect-src 'self' ${apiUrl} https://wa.me https://*.ingest.sentry.io https://*.ingest.us.sentry.io`,
             ].join("; "),
           },
         ],
@@ -57,4 +58,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  sourcemaps: { disable: true },
+});
