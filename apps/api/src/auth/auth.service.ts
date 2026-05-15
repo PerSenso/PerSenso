@@ -27,6 +27,8 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new UnauthorizedException('Credenciales inválidas');
 
+    if (!user.isActive) throw new ForbiddenException('Usuario desactivado');
+
     const tokens = await this.generateTokens(user.id, user.role);
 
     const sig = tokens.refreshToken.split('.')[2];

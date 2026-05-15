@@ -3,12 +3,11 @@ import { cookies } from 'next/headers';
 import { api, ApiError } from '@/lib/api-client';
 import { UsuariosContent } from './UsuariosContent';
 
-function decodeJwtRole(token: string): string | null {
+function decodeJwt(token: string): { role?: string; sub?: string } {
   try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
-    return payload.role ?? null;
+    return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
   } catch {
-    return null;
+    return {};
   }
 }
 
@@ -18,15 +17,15 @@ export default async function UsuariosPage() {
 
   if (!token) redirect('/admin/login');
 
-  const role = decodeJwtRole(token);
-  if (role !== 'OWNER') redirect('/admin/dashboard');
+  const payload = decodeJwt(token);
+  if (payload.role !== 'OWNER') redirect('/admin/dashboard');
 
   try {
     const users = await api.users.list();
-    return <UsuariosContent users={users} />;
+    return <UsuariosContent users={users} currentUserId={payload.sub ?? ''} />;
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) redirect('/admin/login');
     if (e instanceof ApiError && e.status === 403) redirect('/admin/dashboard');
-    return <UsuariosContent users={[]} />;
+    return <UsuariosContent users={[]} currentUserId={payload.sub ?? ''} />;
   }
 }

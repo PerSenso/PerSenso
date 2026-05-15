@@ -198,9 +198,9 @@ export const api = {
 
   // Users (OWNER only)
   users: {
-    list: () => apiFetch<{ id: string; username: string; role: string; createdAt: string }[]>('/users'),
+    list: () => apiFetch<{ id: string; username: string; role: string; isActive: boolean; createdAt: string }[]>('/users'),
     create: (data: { username: string; password: string; role: 'ADMIN' | 'OWNER' }) =>
-      apiFetch<{ id: string; username: string; role: string; createdAt: string }>('/users', {
+      apiFetch<{ id: string; username: string; role: string; isActive: boolean; createdAt: string }>('/users', {
         method: 'POST',
         body: JSON.stringify(data),
       }),

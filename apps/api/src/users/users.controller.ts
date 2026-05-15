@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  UseGuards,
+  ParseUUIDPipe,
+  Req,
+} from '@nestjs/common';
+import { Request } from 'express';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -19,5 +30,17 @@ export class UsersController {
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
+  }
+
+  @Patch(':id/deactivate')
+  deactivate(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
+    const requesterId = (req.user as { id: string }).id;
+    return this.usersService.setActive(id, false, requesterId);
+  }
+
+  @Patch(':id/activate')
+  activate(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
+    const requesterId = (req.user as { id: string }).id;
+    return this.usersService.setActive(id, true, requesterId);
   }
 }

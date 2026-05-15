@@ -17,6 +17,7 @@ const mockUser = {
   username: 'admin',
   password: 'hashed-password',
   role: 'ADMIN',
+  isActive: true,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
