@@ -49,7 +49,7 @@ const Header = () => {
         borderBottom: scrolled ? `1px solid var(--ps-header-border)` : "1px solid transparent",
       }}
     >
-      <div className="container mx-auto flex items-center justify-between px-4">
+      <div className="container mx-auto flex items-center justify-between px-4 relative">
         {/* Logo */}
         <Link href="/" className="flex items-center group">
           <motion.div
@@ -68,8 +68,8 @@ const Header = () => {
           </motion.div>
         </Link>
 
-        {/* Nav */}
-        <nav className="hidden md:flex items-center gap-8">
+        {/* Nav — absolutamente centrado respecto al contenedor */}
+        <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8">
           {[
             { label: "Catálogo", id: "catalogo" },
             { label: "Nosotros", id: "nosotros" },
