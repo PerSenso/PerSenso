@@ -1,14 +1,97 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Upload, ExternalLink, Trash2 } from 'lucide-react';
+import { Upload, ExternalLink, Trash2, ChevronDown } from 'lucide-react';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
-import type { Sale } from '@persenso/shared';
+import type { Sale, Client } from '@persenso/shared';
+
+interface ComboboxOption {
+  value: string;
+  label: string;
+}
+
+function Combobox({ options, value, onChange, placeholder }: {
+  options: ComboboxOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = options.find((o) => o.value === value);
+  const filtered = query.length === 0
+    ? options
+    : options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()));
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`${fieldCls} w-full flex items-center justify-between text-left`}
+        style={fieldStyle}
+      >
+        <span style={{ color: selected ? 'var(--ps-text)' : 'var(--ps-text-muted)' }}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <ChevronDown className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--ps-text-muted)' }} />
+      </button>
+      {open && (
+        <div
+          className="absolute z-50 w-full mt-1 rounded-lg overflow-hidden"
+          style={{ background: 'var(--ps-surface-raised)', border: '1px solid var(--ps-border)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+        >
+          <div className="p-2" style={{ borderBottom: '1px solid var(--ps-border)' }}>
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar..."
+              className="w-full bg-transparent text-sm outline-none px-1"
+              style={{ color: 'var(--ps-text)' }}
+            />
+          </div>
+          <ul className="max-h-48 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-sm" style={{ color: 'var(--ps-text-muted)' }}>Sin resultados</li>
+            ) : filtered.map((o) => (
+              <li
+                key={o.value}
+                onClick={() => { onChange(o.value); setOpen(false); setQuery(''); }}
+                className="px-3 py-2 text-sm cursor-pointer"
+                style={{
+                  color: o.value === value ? 'var(--ps-gold)' : 'var(--ps-text)',
+                  background: o.value === value ? 'rgba(201,168,76,0.08)' : 'transparent',
+                }}
+              >
+                {o.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface EditSaleDialogProps {
   sale: Sale;
+  clients: Client[];
   onClose: () => void;
 }
 
@@ -20,7 +103,7 @@ function fmtMethod(m: string) {
   return map[m] ?? m;
 }
 
-export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
+export function EditSaleDialog({ sale, clients, onClose }: EditSaleDialogProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
@@ -33,6 +116,7 @@ export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
     total: String(Number(sale.total).toFixed(2)),
     date: sale.date.split('T')[0],
     notes: sale.notes ?? '',
+    clientId: sale.client?.id ?? '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,6 +131,7 @@ export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
           total: Number(form.total),
           date: new Date(form.date).toISOString(),
           notes: form.notes || null,
+          ...(form.clientId !== (sale.client?.id ?? '') && { clientId: form.clientId }),
         }),
       });
 
@@ -105,7 +190,7 @@ export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
 
   return (
     <AdminModal title="Editar Venta" onClose={onClose}>
-      {/* Info de contexto (solo lectura) */}
+      {/* Info de contexto */}
       <div
         className="rounded-lg px-4 py-3 mb-5 space-y-1"
         style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}
@@ -114,16 +199,22 @@ export function EditSaleDialog({ sale, onClose }: EditSaleDialogProps) {
           Datos de la venta
         </p>
         <div className="flex justify-between text-sm">
-          <span style={{ color: 'var(--ps-text-muted)' }}>Cliente</span>
-          <span className="font-medium" style={{ color: 'var(--ps-text)' }}>{sale.client?.name ?? '—'}</span>
-        </div>
-        <div className="flex justify-between text-sm">
           <span style={{ color: 'var(--ps-text-muted)' }}>Producto</span>
           <span className="font-medium" style={{ color: 'var(--ps-text)' }}>{sale.product?.name ?? '—'}</span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className={labelCls} style={labelStyle}>Cliente</label>
+          <Combobox
+            options={clients.map((c) => ({ value: c.id, label: c.name }))}
+            value={form.clientId}
+            onChange={(v) => setForm({ ...form, clientId: v })}
+            placeholder="Seleccionar cliente..."
+          />
+        </div>
+
         <div>
           <label className={labelCls} style={labelStyle}>Total ($)</label>
           <input

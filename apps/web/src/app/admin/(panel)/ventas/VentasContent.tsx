@@ -212,7 +212,7 @@ export function VentasContent({ sales, clients, products }: VentasContentProps) 
       )}
 
       {editingSale && (
-        <EditSaleDialog sale={editingSale} onClose={() => setEditingSale(null)} />
+        <EditSaleDialog sale={editingSale} clients={clients} onClose={() => setEditingSale(null)} />
       )}
 
       {tracingSale && (

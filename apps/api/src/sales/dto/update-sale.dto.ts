@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsPositive,
   IsDateString,
+  IsUUID,
 } from 'class-validator';
 
 export class UpdateSaleDto {
@@ -19,4 +20,8 @@ export class UpdateSaleDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsUUID()
+  clientId?: string;
 }

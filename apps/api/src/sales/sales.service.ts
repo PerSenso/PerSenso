@@ -146,6 +146,7 @@ export class SalesService {
         ...(dto.total !== undefined && { total: dto.total }),
         ...(dto.date !== undefined && { date: new Date(dto.date) }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.clientId !== undefined && { clientId: dto.clientId }),
       },
     });
   }
