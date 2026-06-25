@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { UpdatePaymentDto } from './dto/update-payment.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -49,6 +50,19 @@ export class PaymentsService {
         paymentMethod: dto.paymentMethod,
         date: new Date(dto.date),
         notes: dto.notes ?? null,
+      },
+    });
+  }
+
+  async update(id: string, dto: UpdatePaymentDto) {
+    await this.findOne(id);
+    return this.prisma.payment.update({
+      where: { id },
+      data: {
+        ...(dto.amount !== undefined && { amount: dto.amount }),
+        ...(dto.paymentMethod !== undefined && { paymentMethod: dto.paymentMethod }),
+        ...(dto.date !== undefined && { date: new Date(dto.date) }),
+        ...(dto.notes !== undefined && { notes: dto.notes || null }),
       },
     });
   }
