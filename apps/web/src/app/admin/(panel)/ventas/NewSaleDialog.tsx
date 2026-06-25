@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Paperclip, ChevronDown } from 'lucide-react';
+import { X, Paperclip, ChevronDown, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -146,20 +146,32 @@ interface NewSaleDialogProps {
   onClose: () => void;
 }
 
+interface PaymentRow {
+  amount: string;
+  method: string;
+  receiptFile: File | null;
+}
+
+const METHODS = [
+  { value: 'efectivo', label: 'Efectivo' },
+  { value: 'pago_movil', label: 'Pago Móvil' },
+  { value: 'transferencia', label: 'Transferencia' },
+  { value: 'zelle', label: 'Zelle' },
+  { value: 'binance', label: 'Binance' },
+];
+
 export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const receiptInputRef = useRef<HTMLInputElement>(null);
+  const receiptRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [form, setForm] = useState({
     clientId: '',
     productId: '',
     total: '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
-    initialPaymentAmount: '',
-    initialPaymentMethod: '',
   });
+  const [payments, setPayments] = useState<PaymentRow[]>([{ amount: '', method: '', receiptFile: null }]);
 
   const selectedProduct = products.find((p) => p.id === form.productId);
 
@@ -178,6 +190,18 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
       disabled: (p.stock ?? 0) <= 0,
     }));
 
+  const validPayments = payments.filter((p) => p.amount && p.method);
+  const totalPagado = validPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalVenta = Number(form.total) || 0;
+
+  const updatePayment = (index: number, field: keyof PaymentRow, value: string | File | null) => {
+    setPayments((prev) => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  };
+
+  const addPayment = () => setPayments((prev) => [...prev, { amount: '', method: '', receiptFile: null }]);
+
+  const removePayment = (index: number) => setPayments((prev) => prev.filter((_, i) => i !== index));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.clientId) { toast.error('Selecciona un cliente'); return; }
@@ -193,11 +217,8 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
         notes: form.notes || undefined,
       };
 
-      if (form.initialPaymentAmount && form.initialPaymentMethod) {
-        body.initialPayment = {
-          amount: Number(form.initialPaymentAmount),
-          method: form.initialPaymentMethod,
-        };
+      if (validPayments.length > 0) {
+        body.initialPayments = validPayments.map((p) => ({ amount: Number(p.amount), method: p.method }));
       }
 
       const res = await fetch('/api/admin/sales', {
@@ -211,12 +232,17 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
         throw new Error((data as { message?: string }).message ?? 'Error al crear la venta');
       }
 
-      const created = await res.json() as { payments?: { id: string; isInitial: boolean }[] };
-      if (receiptFile && created.payments?.length) {
-        const initialPayment = created.payments.find((p) => p.isInitial) ?? created.payments[0];
-        const fd = new FormData();
-        fd.append('receipt', receiptFile);
-        await fetch(`/api/admin/payments/${initialPayment.id}/receipt`, { method: 'POST', body: fd });
+      const created = await res.json() as { payments?: { id: string; isInitial: boolean; createdAt: string }[] };
+      const createdInitial = (created.payments ?? [])
+        .filter((p) => p.isInitial)
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+      for (let i = 0; i < validPayments.length; i++) {
+        if (validPayments[i].receiptFile && createdInitial[i]) {
+          const fd = new FormData();
+          fd.append('receipt', validPayments[i].receiptFile!);
+          await fetch(`/api/admin/payments/${createdInitial[i].id}/receipt`, { method: 'POST', body: fd });
+        }
       }
 
       toast.success('Venta creada exitosamente');
@@ -334,74 +360,106 @@ export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps
             />
           </div>
 
-          {/* Initial payment */}
+          {/* Pagos iniciales */}
           <div className="pt-2" style={{ borderTop: '1px solid var(--ps-border)' }}>
             <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--ps-text-muted)' }}>
-              Pago Inicial (opcional)
+              Pagos Iniciales (opcional)
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="Monto"
-                  value={form.initialPaymentAmount}
-                  onChange={(e) => setForm({ ...form, initialPaymentAmount: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg text-sm"
-                  style={{ background: 'var(--ps-input-bg)', border: '1px solid var(--ps-input-border)', color: 'var(--ps-input-text)' }}
-                />
-              </div>
-              <div>
-                <select
-                  value={form.initialPaymentMethod}
-                  onChange={(e) => setForm({ ...form, initialPaymentMethod: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg text-sm"
-                  style={{ background: 'var(--ps-input-bg)', border: '1px solid var(--ps-input-border)', color: 'var(--ps-input-text)' }}
-                >
-                  <option value="">Método</option>
-                  <option value="efectivo">Efectivo</option>
-                  <option value="pago_movil">Pago Móvil</option>
-                  <option value="transferencia">Transferencia</option>
-                  <option value="zelle">Zelle</option>
-                  <option value="binance">Binance</option>
-                </select>
-              </div>
-            </div>
-            {form.initialPaymentAmount && form.initialPaymentMethod && (
-              <div className="mt-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => receiptInputRef.current?.click()}
-                    className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg text-sm transition-colors"
-                    style={{
-                      border: '1px dashed var(--ps-border)',
-                      color: receiptFile ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
-                      background: receiptFile ? 'rgba(201,168,76,0.06)' : 'transparent',
-                    }}
-                  >
-                    <Paperclip className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="truncate">{receiptFile ? receiptFile.name : 'Adjuntar comprobante (opcional)'}</span>
-                  </button>
-                  {receiptFile && (
-                    <button
-                      type="button"
-                      onClick={() => { setReceiptFile(null); if (receiptInputRef.current) receiptInputRef.current.value = ''; }}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ color: 'var(--ps-red)', background: 'rgba(224,92,92,0.1)' }}
-                      title="Quitar comprobante"
+
+            <div className="space-y-3">
+              {payments.map((payment, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="Monto"
+                      value={payment.amount}
+                      onChange={(e) => updatePayment(index, 'amount', e.target.value)}
+                      className="flex-1 px-3 py-2.5 rounded-lg text-sm"
+                      style={{ background: 'var(--ps-input-bg)', border: '1px solid var(--ps-input-border)', color: 'var(--ps-input-text)' }}
+                    />
+                    <select
+                      value={payment.method}
+                      onChange={(e) => updatePayment(index, 'method', e.target.value)}
+                      className="flex-1 px-3 py-2.5 rounded-lg text-sm"
+                      style={{ background: 'var(--ps-input-bg)', border: '1px solid var(--ps-input-border)', color: 'var(--ps-input-text)' }}
                     >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                      <option value="">Método</option>
+                      {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                    {payments.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removePayment(index)}
+                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ color: 'var(--ps-red)', background: 'rgba(224,92,92,0.1)' }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {payment.amount && payment.method && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => receiptRefs.current[index]?.click()}
+                        className="flex items-center gap-2 flex-1 px-3 py-2 rounded-lg text-sm"
+                        style={{
+                          border: '1px dashed var(--ps-border)',
+                          color: payment.receiptFile ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
+                          background: payment.receiptFile ? 'rgba(201,168,76,0.06)' : 'transparent',
+                        }}
+                      >
+                        <Paperclip className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate text-xs">{payment.receiptFile ? payment.receiptFile.name : 'Adjuntar comprobante (opcional)'}</span>
+                      </button>
+                      {payment.receiptFile && (
+                        <button
+                          type="button"
+                          onClick={() => { updatePayment(index, 'receiptFile', null); if (receiptRefs.current[index]) receiptRefs.current[index]!.value = ''; }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ color: 'var(--ps-red)', background: 'rgba(224,92,92,0.1)' }}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <input
+                        ref={(el) => { receiptRefs.current[index] = el; }}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => updatePayment(index, 'receiptFile', e.target.files?.[0] ?? null)}
+                      />
+                    </div>
                   )}
                 </div>
-                <input
-                  ref={receiptInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
-                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={addPayment}
+              className="mt-3 flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: 'var(--ps-gold)' }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Agregar método de pago
+            </button>
+
+            {validPayments.length > 0 && totalVenta > 0 && (
+              <div
+                className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium"
+                style={{
+                  background: totalPagado >= totalVenta ? 'rgba(34,197,94,0.08)' : 'rgba(201,168,76,0.08)',
+                  border: `1px solid ${totalPagado >= totalVenta ? 'rgba(34,197,94,0.3)' : 'rgba(201,168,76,0.3)'}`,
+                }}
+              >
+                <span style={{ color: 'var(--ps-text-muted)' }}>Total pagado</span>
+                <span style={{ color: totalPagado >= totalVenta ? '#22c55e' : 'var(--ps-gold)' }}>
+                  ${totalPagado.toFixed(2)} / ${totalVenta.toFixed(2)}
+                </span>
               </div>
             )}
           </div>

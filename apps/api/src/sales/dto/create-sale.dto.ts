@@ -6,6 +6,7 @@ import {
   IsPositive,
   IsDateString,
   ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -40,4 +41,10 @@ export class CreateSaleDto {
   @ValidateNested()
   @Type(() => InitialPaymentDto)
   initialPayment?: InitialPaymentDto;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => InitialPaymentDto)
+  initialPayments?: InitialPaymentDto[];
 }

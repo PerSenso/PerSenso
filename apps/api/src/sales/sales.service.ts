@@ -118,13 +118,14 @@ export class SalesService {
         },
       });
 
-      if (dto.initialPayment) {
+      const paymentsToCreate = dto.initialPayments ?? (dto.initialPayment ? [dto.initialPayment] : []);
+      for (const payment of paymentsToCreate) {
         await tx.payment.create({
           data: {
             saleId: sale.id,
             clientId: dto.clientId,
-            amount: dto.initialPayment.amount,
-            paymentMethod: dto.initialPayment.method,
+            amount: payment.amount,
+            paymentMethod: payment.method,
             isInitial: true,
             date: new Date(),
           },
