@@ -54,7 +54,7 @@ function Combobox({ options, value, onChange, placeholder }: {
       {open && (
         <div
           className="absolute z-50 w-full mt-1 rounded-lg overflow-hidden"
-          style={{ background: 'var(--ps-surface-raised)', border: '1px solid var(--ps-border)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+          style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
         >
           <div className="p-2" style={{ borderBottom: '1px solid var(--ps-border)' }}>
             <input
