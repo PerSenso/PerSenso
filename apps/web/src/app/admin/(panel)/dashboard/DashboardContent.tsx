@@ -609,7 +609,7 @@ export function DashboardContent({
 
       {selectedClientId && (
         <ClienteDetailModal
-          client={{ id: selectedClientId.id, name: selectedClientId.name, debt: 0, createdAt: '', updatedAt: '' }}
+          client={{ id: selectedClientId.id, name: selectedClientId.name, debt: 0, salesCount: 0, createdAt: '', updatedAt: '' }}
           onClose={() => setSelectedClientId(null)}
         />
       )}
