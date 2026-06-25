@@ -122,6 +122,14 @@ export function ClientesContent({ clients }: ClientesContentProps) {
             render: (c) => new Date(c.createdAt).toLocaleDateString('es-VE'),
           },
           {
+            key: 'salesCount', header: 'Compras', align: 'right', sortable: true,
+            render: (c) => (
+              <span className="font-semibold tabular-nums" style={{ color: c.salesCount > 0 ? 'var(--ps-text)' : 'var(--ps-text-muted)' }}>
+                {c.salesCount > 0 ? c.salesCount : '—'}
+              </span>
+            ),
+          },
+          {
             key: 'debt', header: 'Deuda', align: 'right', sortable: true,
             render: (c) => (
               <span className="font-semibold tabular-nums"

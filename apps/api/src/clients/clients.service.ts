@@ -27,6 +27,7 @@ export class ClientsService {
         createdAt: Date;
         updatedAt: Date;
         debt: unknown;
+        salesCount: unknown;
       }[]
     >`
       SELECT
@@ -44,7 +45,8 @@ export class ClientsService {
           (SELECT SUM(p.amount) FROM "Payment" p
            JOIN "Sale" s2 ON p."saleId" = s2.id
            WHERE s2."clientId" = c.id AND s2.status = 'ACTIVA'), 0
-        ) AS debt
+        ) AS debt,
+        (SELECT COUNT(*) FROM "Sale" s WHERE s."clientId" = c.id AND s.status = 'ACTIVA') AS "salesCount"
       FROM "Client" c
       ORDER BY c.name ASC
     `;
@@ -58,6 +60,7 @@ export class ClientsService {
       createdAt: (row.createdAt as Date).toISOString(),
       updatedAt: (row.updatedAt as Date).toISOString(),
       debt: Number(row.debt ?? 0),
+      salesCount: Number(row.salesCount ?? 0),
     }));
   }
 

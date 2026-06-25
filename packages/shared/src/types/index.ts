@@ -15,6 +15,7 @@ export interface Client {
 
 export interface ClientWithDebt extends Client {
   debt: number;
+  salesCount: number;
 }
 
 export interface SaleWithDebt {
