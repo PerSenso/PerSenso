@@ -49,21 +49,30 @@ interface AccordEditorProps {
 export function AccordEditor({ accords, onChange }: AccordEditorProps) {
   const [name, setName] = useState('');
   const [intensity, setIntensity] = useState(80);
+  const [color, setColor] = useState('#C9A84C');
 
   const sorted = [...accords].sort((a, b) => b.intensity - a.intensity);
+
+  const handleNameChange = (value: string) => {
+    setName(value);
+    setColor(getColor(value));
+  };
 
   const add = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     if (accords.some((a) => a.name.toLowerCase() === trimmed.toLowerCase())) return;
-    onChange([...accords, { name: trimmed, intensity, color: getColor(trimmed) }]);
+    onChange([...accords, { name: trimmed, intensity, color }]);
     setName('');
     setIntensity(80);
+    setColor('#C9A84C');
   };
 
   const remove = (n: string) => onChange(accords.filter((a) => a.name !== n));
 
-  const labelCls = 'text-[10px] font-bold uppercase tracking-widest mb-1 block';
+  const updateColor = (n: string, c: string) =>
+    onChange(accords.map((a) => (a.name === n ? { ...a, color: c } : a)));
+
   const fieldStyle = {
     background: 'var(--ps-input-bg)',
     border: '1px solid var(--ps-border)',
@@ -72,7 +81,9 @@ export function AccordEditor({ accords, onChange }: AccordEditorProps) {
 
   return (
     <div className="space-y-3">
-      <p className={labelCls} style={{ color: 'var(--ps-text-muted)' }}>Acordes olfativos</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--ps-text-muted)' }}>
+        Acordes olfativos
+      </p>
 
       {/* Input row */}
       <div className="flex gap-2 items-end">
@@ -81,7 +92,7 @@ export function AccordEditor({ accords, onChange }: AccordEditorProps) {
           <input
             list="accord-suggestions"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), add())}
             placeholder="Escribe cualquier acorde o elige uno…"
             className="w-full px-3 py-2 rounded-lg text-sm outline-none"
@@ -91,11 +102,30 @@ export function AccordEditor({ accords, onChange }: AccordEditorProps) {
             {SUGGESTIONS.map((s) => <option key={s} value={s} />)}
           </datalist>
         </div>
+
+        {/* Color picker */}
+        <div className="flex-shrink-0">
+          <p className="text-[10px] mb-1" style={{ color: 'var(--ps-text-muted)' }}>Color</p>
+          <label
+            className="w-9 h-9 rounded-lg cursor-pointer flex items-center justify-center overflow-hidden relative"
+            style={{ border: '2px solid var(--ps-border)' }}
+            title="Cambiar color"
+          >
+            <div className="absolute inset-0 rounded-md" style={{ background: color }} />
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+            />
+          </label>
+        </div>
+
         <button
           type="button"
           onClick={add}
           disabled={!name.trim()}
-          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 disabled:opacity-40 btn-gold"
+          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 disabled:opacity-40 btn-gold self-end"
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -118,17 +148,15 @@ export function AccordEditor({ accords, onChange }: AccordEditorProps) {
         />
       </div>
 
-      {/* Preview color */}
+      {/* Preview bar */}
       {name.trim() && (
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: getColor(name) }} />
-          <span className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>
-            Color: <span className="font-medium" style={{ color: 'var(--ps-text)' }}>{getColor(name) === '#C9A84C' ? 'dorado (genérico)' : 'asignado automáticamente'}</span>
-          </span>
+        <div className="h-7 rounded-lg flex items-center px-3 overflow-hidden" style={{ background: color }}>
+          <span className="text-xs font-medium text-white truncate">{name.trim()}</span>
+          <span className="ml-auto text-xs text-white/70 tabular-nums flex-shrink-0">{intensity}%</span>
         </div>
       )}
 
-      {/* Bars preview */}
+      {/* Bars list */}
       {sorted.length > 0 && (
         <div className="space-y-1.5 pt-1">
           <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--ps-text-muted)' }}>
@@ -136,6 +164,16 @@ export function AccordEditor({ accords, onChange }: AccordEditorProps) {
           </p>
           {sorted.map((a) => (
             <div key={a.name} className="flex items-center gap-2 group">
+              {/* Color dot — editable */}
+              <label className="w-5 h-5 rounded-full cursor-pointer flex-shrink-0 relative overflow-hidden" title="Cambiar color" style={{ background: a.color }}>
+                <input
+                  type="color"
+                  value={a.color}
+                  onChange={(e) => updateColor(a.name, e.target.value)}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                />
+              </label>
+
               <div className="flex-1 relative h-7 rounded-lg overflow-hidden" style={{ background: 'var(--ps-surface)' }}>
                 <div
                   className="h-full rounded-lg flex items-center px-3 transition-all"
