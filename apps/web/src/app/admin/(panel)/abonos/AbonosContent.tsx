@@ -6,7 +6,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import { AdminModal } from '@/components/admin/AdminModal';
 import type { SaleWithDebt, Payment } from '@persenso/shared';
-import { CreditCard, List, Pencil, Check, X } from 'lucide-react';
+import { CreditCard, List, Pencil, Check, X, Trash2 } from 'lucide-react';
 import { AbonarDialog } from './AbonarDialog';
 import { IdBadge } from '@/components/admin/IdBadge';
 import { NotaCell } from '@/components/admin/NotaCell';
@@ -55,6 +55,8 @@ function HistorialModal({ sale, onClose }: { sale: SaleWithDebt; onClose: () => 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ amount: '', paymentMethod: '', date: '', notes: '' });
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const startEdit = (p: Payment) => {
     setEditingId(p.id);
@@ -67,6 +69,22 @@ function HistorialModal({ sale, onClose }: { sale: SaleWithDebt; onClose: () => 
   };
 
   const cancelEdit = () => setEditingId(null);
+
+  const deletePayment = async (id: string) => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/payments/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      toast.success('Abono eliminado');
+      setConfirmDeleteId(null);
+      router.refresh();
+      onClose();
+    } catch {
+      toast.error('Error al eliminar el abono');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const saveEdit = async (id: string) => {
     setSaving(true);
@@ -158,6 +176,24 @@ function HistorialModal({ sale, onClose }: { sale: SaleWithDebt; onClose: () => 
                     </button>
                   </div>
                 </div>
+              ) : confirmDeleteId === p.id ? (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs" style={{ color: 'var(--ps-text-muted)' }}>
+                    ¿Eliminar abono de <strong style={{ color: 'var(--ps-red)' }}>{formatCurrency(Number(p.amount))}</strong>?
+                  </p>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={() => setConfirmDeleteId(null)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
+                      <X className="w-3 h-3" /> Cancelar
+                    </button>
+                    <button onClick={() => deletePayment(p.id)} disabled={deleting}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
+                      style={{ background: 'rgba(224,92,92,0.18)', color: 'var(--ps-red)', border: '1px solid var(--ps-red)' }}>
+                      <Trash2 className="w-3 h-3" /> {deleting ? 'Eliminando…' : 'Confirmar'}
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 text-sm flex-1 min-w-0">
@@ -174,12 +210,20 @@ function HistorialModal({ sale, onClose }: { sale: SaleWithDebt; onClose: () => 
                       <span className="text-xs truncate" style={{ color: 'var(--ps-text-muted)' }}>{p.notes}</span>
                     )}
                   </div>
-                  <button onClick={() => startEdit(p)}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}
-                    title="Editar abono">
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => startEdit(p)}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}
+                      title="Editar abono">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => setConfirmDeleteId(p.id)}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ color: 'var(--ps-red)', background: 'rgba(224,92,92,0.1)', border: '1px solid var(--ps-red)' }}
+                      title="Eliminar abono">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
