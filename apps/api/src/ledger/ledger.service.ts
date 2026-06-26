@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { UpdateMovementDto } from './dto/update-movement.dto';
@@ -23,7 +24,9 @@ export class LedgerService {
           (SELECT COALESCE(SUM(quantity * "baseUnitCost"), 0) FROM "Restock") +
           (SELECT COALESCE(SUM("shippingCost" + "marketingCost"), 0) FROM "Order") AS total
       `,
-      this.prisma.cashMovement.findMany({ orderBy: [{ date: 'desc' }, { createdAt: 'desc' }] }),
+      this.prisma.cashMovement.findMany({
+        orderBy: [{ date: 'desc' }, { exchangeId: 'desc' }, { createdAt: 'desc' }],
+      }),
     ]);
 
     const paymentsByMethod = paymentRows.map((p) => ({
@@ -112,28 +115,14 @@ export class LedgerService {
     const notes = dto.notes ?? label;
     const date = new Date(dto.date);
     const owner = dto.owner ?? null;
+    const exchangeId = randomUUID();
+
     const [retiro, ingreso] = await this.prisma.$transaction([
       this.prisma.cashMovement.create({
-        data: {
-          type: 'retiro',
-          source: label,
-          method: dto.fromMethod,
-          amount: dto.amount,
-          date,
-          notes,
-          owner,
-        },
+        data: { type: 'retiro', source: label, method: dto.fromMethod, amount: dto.amount, date, notes, owner, exchangeId },
       }),
       this.prisma.cashMovement.create({
-        data: {
-          type: 'ingreso',
-          source: label,
-          method: dto.toMethod,
-          amount: dto.amount,
-          date,
-          notes,
-          owner,
-        },
+        data: { type: 'ingreso', source: label, method: dto.toMethod, amount: dto.amount, date, notes, owner, exchangeId },
       }),
     ]);
     return { retiro, ingreso };

@@ -169,5 +169,6 @@ model CashMovement {
   notes         String?
   owner         String?
   paymentMethod String?
+  exchangeId    String?
   createdAt     DateTime @default(now())
 }
