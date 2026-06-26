@@ -14,6 +14,8 @@ function makeItem(name: string, salePrice: number, quantity: number): StoreCartI
       sizeMl: 50,
       imageUrl: null,
       notes: null,
+      description: null,
+      accords: [],
       stock: 5,
       published: true,
     },

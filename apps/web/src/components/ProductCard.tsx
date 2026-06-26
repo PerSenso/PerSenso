@@ -7,6 +7,7 @@ import { getStockColorClass, getStockLabel } from "@/lib/stock-utils";
 import { useState } from "react";
 import { PerfumeSplash } from "./PerfumeSplash";
 import Image from "next/image";
+import { ProductDetailSheet } from "./ProductDetailSheet";
 import type { StoreProduct } from "@/types/store";
 
 interface ProductCardProps {
@@ -16,6 +17,7 @@ interface ProductCardProps {
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart, items } = useCart();
   const [splash, setSplash] = useState<{ x: number; y: number; id: number } | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
 
   const handleAdd = (e: React.MouseEvent) => {
     const cartItem = items.find((item) => item.product.id === product.id);
@@ -53,8 +55,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
     >
       {/* Image */}
       <div
-        className="aspect-square flex items-center justify-center overflow-hidden relative"
+        className="aspect-square flex items-center justify-center overflow-hidden relative cursor-pointer"
         style={{ background: "var(--ps-surface)" }}
+        onClick={() => setShowDetail(true)}
       >
         {(isCritical || isWarning) && product.stock > 0 && (
           <motion.div
@@ -173,6 +176,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
           }}
         />
       )}
+
+      <ProductDetailSheet
+        product={showDetail ? product : null}
+        onClose={() => setShowDetail(false)}
+      />
     </motion.div>
   );
 };

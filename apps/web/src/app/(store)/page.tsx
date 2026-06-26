@@ -17,6 +17,8 @@ async function getProducts(): Promise<StoreProduct[]> {
       salePrice: Number(p.salePrice ?? 0),
       stock: Number(p.stock ?? 0),
       sizeMl: Number(p.sizeMl ?? 100),
+      description: (p.description as string) ?? null,
+      accords: Array.isArray(p.accords) ? p.accords : [],
     }));
   } catch {
     return [];

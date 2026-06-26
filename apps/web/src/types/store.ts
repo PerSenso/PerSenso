@@ -1,3 +1,9 @@
+export interface AccordItem {
+  name: string;
+  intensity: number;
+  color: string;
+}
+
 export interface StoreProduct {
   id: string;
   name: string;
@@ -8,6 +14,8 @@ export interface StoreProduct {
   sizeMl: number;
   imageUrl: string | null;
   notes: string | null;
+  description: string | null;
+  accords: AccordItem[];
   stock: number;
   published: boolean;
 }
