@@ -7,9 +7,10 @@ import { AdminStatCard } from '@/components/admin/AdminStatCard';
 import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import { AdminModal } from '@/components/admin/AdminModal';
 import type { LedgerSummary, FundingContribution, CashMovement } from '@persenso/shared';
-import { Wallet, TrendingUp, TrendingDown, CreditCard, Pencil, Trash2 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, CreditCard, Pencil, Trash2, ArrowLeftRight } from 'lucide-react';
 import { NotaCell } from '@/components/admin/NotaCell';
 import { EditMovementDialog } from './EditMovementDialog';
+import { CambioDialog } from './CambioDialog';
 
 interface SaldoContentProps {
   ledger: LedgerSummary;
@@ -35,6 +36,7 @@ export function SaldoContent({ ledger, contributions }: SaldoContentProps) {
   const socios = contributions.map((c) => c.investor);
   const [editing, setEditing] = useState<CashMovement | null>(null);
   const [deleting, setDeleting] = useState<CashMovement | null>(null);
+  const [showCambio, setShowCambio] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
@@ -62,6 +64,7 @@ export function SaldoContent({ ledger, contributions }: SaldoContentProps) {
       <AdminPageHeader title="Saldo / Caja" subtitle="Control de ingresos y egresos" />
 
       {editing && <EditMovementDialog movement={editing} socios={socios} onClose={() => setEditing(null)} />}
+      {showCambio && <CambioDialog onClose={() => setShowCambio(false)} onSuccess={() => router.refresh()} />}
 
       {deleting && (
         <AdminModal title="Eliminar Movimiento" onClose={() => setDeleting(null)}>
@@ -157,9 +160,18 @@ export function SaldoContent({ ledger, contributions }: SaldoContentProps) {
 
       {/* Movements table */}
       <div>
-        <h2 className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--ps-text-muted)' }}>
-          Movimientos Manuales
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--ps-text-muted)' }}>
+            Movimientos Manuales
+          </h2>
+          <button
+            onClick={() => setShowCambio(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold"
+            style={{ background: 'rgba(201,168,76,0.12)', color: 'var(--ps-gold)', border: '1px solid var(--ps-gold)' }}>
+            <ArrowLeftRight className="w-3.5 h-3.5" />
+            Cambio de Divisa
+          </button>
+        </div>
         <AdminDataTable
           data={ledger.movements}
           keyExtractor={(m) => m.id}

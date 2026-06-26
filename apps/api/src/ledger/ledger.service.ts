@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { UpdateMovementDto } from './dto/update-movement.dto';
+import { CreateExchangeDto } from './dto/create-exchange.dto';
 
 @Injectable()
 export class LedgerService {
@@ -104,6 +105,35 @@ export class LedgerService {
       totalContributed: Number(r.total),
       ordersCount: Number(r.count),
     }));
+  }
+
+  async createExchange(dto: CreateExchangeDto) {
+    const label = `Cambio: ${dto.fromMethod.toUpperCase()} → ${dto.toMethod.toUpperCase()}`;
+    const notes = dto.notes ?? label;
+    const date = new Date(dto.date);
+    const [retiro, ingreso] = await this.prisma.$transaction([
+      this.prisma.cashMovement.create({
+        data: {
+          type: 'retiro',
+          source: label,
+          method: dto.fromMethod,
+          amount: dto.amount,
+          date,
+          notes,
+        },
+      }),
+      this.prisma.cashMovement.create({
+        data: {
+          type: 'ingreso',
+          source: label,
+          method: dto.toMethod,
+          amount: dto.amount,
+          date,
+          notes,
+        },
+      }),
+    ]);
+    return { retiro, ingreso };
   }
 
   async removeMovement(id: string) {

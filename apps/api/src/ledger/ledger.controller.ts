@@ -12,6 +12,7 @@ import {
 import { LedgerService } from './ledger.service';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { UpdateMovementDto } from './dto/update-movement.dto';
+import { CreateExchangeDto } from './dto/create-exchange.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -35,6 +36,11 @@ export class LedgerController {
   @Post('movements')
   createMovement(@Body() dto: CreateMovementDto) {
     return this.ledgerService.createMovement(dto);
+  }
+
+  @Post('exchanges')
+  createExchange(@Body() dto: CreateExchangeDto) {
+    return this.ledgerService.createExchange(dto);
   }
 
   @Patch('movements/:id')
