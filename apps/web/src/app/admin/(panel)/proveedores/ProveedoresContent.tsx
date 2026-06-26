@@ -6,7 +6,7 @@ import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Supplier, Order, OrderKpis, ProductAdmin } from '@persenso/shared';
 import {
   Plus, Truck, Pencil, ChevronDown, ChevronUp,
-  ShoppingBag, BarChart3, DollarSign, Filter, ChevronRight, PackageCheck, Clock,
+  ShoppingBag, BarChart3, DollarSign, Filter, ChevronRight, PackageCheck, Clock, Undo2,
 } from 'lucide-react';
 import { IdBadge } from '@/components/admin/IdBadge';
 import { NotaCell } from '@/components/admin/NotaCell';
@@ -66,6 +66,7 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [receivingId, setReceivingId] = useState<string | null>(null);
+  const [unreceivingId, setUnreceivingId] = useState<string | null>(null);
 
   const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
 
@@ -76,6 +77,16 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
       fetchOrders();
     } finally {
       setReceivingId(null);
+    }
+  };
+
+  const handleUnreceive = async (orderId: string) => {
+    setUnreceivingId(orderId);
+    try {
+      await fetch(`/api/admin/orders/${orderId}/unreceive`, { method: 'PATCH' });
+      fetchOrders();
+    } finally {
+      setUnreceivingId(null);
     }
   };
 
@@ -242,7 +253,7 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2 justify-end">
-                            {order.status !== 'RECIBIDO' && (
+                            {order.status !== 'RECIBIDO' ? (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleReceive(order.id); }}
                                 disabled={receivingId === order.id}
@@ -251,6 +262,16 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
                                 title="Marcar como recibido">
                                 <PackageCheck className="w-3.5 h-3.5" />
                                 {receivingId === order.id ? 'Procesando…' : 'Marcar recibido'}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleUnreceive(order.id); }}
+                                disabled={unreceivingId === order.id}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium disabled:opacity-50"
+                                style={{ background: 'rgba(224,92,92,0.1)', color: 'var(--ps-red)', border: '1px solid var(--ps-red)' }}
+                                title="Revertir recepción">
+                                <Undo2 className="w-3.5 h-3.5" />
+                                {unreceivingId === order.id ? 'Procesando…' : 'Revertir'}
                               </button>
                             )}
                             <button onClick={(e) => { e.stopPropagation(); setEditingOrder(order); }}

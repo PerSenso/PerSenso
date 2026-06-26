@@ -60,6 +60,11 @@ export class OrdersController {
     return this.ordersService.receiveOrder(id);
   }
 
+  @Patch(':id/unreceive')
+  unreceiveOrder(@Param('id', ParseUUIDPipe) id: string) {
+    return this.ordersService.unreceiveOrder(id);
+  }
+
   @Roles('OWNER')
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
