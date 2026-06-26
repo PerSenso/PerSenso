@@ -7,17 +7,16 @@ import { getStockColorClass, getStockLabel } from "@/lib/stock-utils";
 import { useState } from "react";
 import { PerfumeSplash } from "./PerfumeSplash";
 import Image from "next/image";
-import { ProductDetailSheet } from "./ProductDetailSheet";
 import type { StoreProduct } from "@/types/store";
 
 interface ProductCardProps {
   product: StoreProduct;
+  onOpenDetail: () => void;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, onOpenDetail }: ProductCardProps) => {
   const { addToCart, items } = useCart();
   const [splash, setSplash] = useState<{ x: number; y: number; id: number } | null>(null);
-  const [showDetail, setShowDetail] = useState(false);
 
   const handleAdd = (e: React.MouseEvent) => {
     const cartItem = items.find((item) => item.product.id === product.id);
@@ -53,11 +52,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
         opacity: isOutOfStock ? 0.6 : 1,
       }}
     >
-      {/* Image */}
+      {/* Image — click opens detail */}
       <div
         className="aspect-square flex items-center justify-center overflow-hidden relative cursor-pointer"
         style={{ background: "var(--ps-surface)" }}
-        onClick={() => setShowDetail(true)}
+        onClick={onOpenDetail}
       >
         {(isCritical || isWarning) && product.stock > 0 && (
           <motion.div
@@ -176,11 +175,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
           }}
         />
       )}
-
-      <ProductDetailSheet
-        product={showDetail ? product : null}
-        onClose={() => setShowDetail(false)}
-      />
     </motion.div>
   );
 };

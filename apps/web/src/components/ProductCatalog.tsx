@@ -1,7 +1,9 @@
 "use client";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import ProductCard from "./ProductCard";
 import ProductFiltersBar from "./ProductFiltersBar";
+import { ProductDetailSheet } from "./ProductDetailSheet";
 import { useProductFilters } from "@/hooks/use-product-filters";
 import type { StoreProduct } from "@/types/store";
 
@@ -11,6 +13,7 @@ interface ProductCatalogProps {
 
 const ProductCatalog = ({ products }: ProductCatalogProps) => {
   const filters = useProductFilters(products);
+  const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
 
   return (
     <section
@@ -77,13 +80,22 @@ const ProductCatalog = ({ products }: ProductCatalogProps) => {
             <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               <AnimatePresence>
                 {filters.filtered.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onOpenDetail={() => setSelectedProduct(product)}
+                  />
                 ))}
               </AnimatePresence>
             </motion.div>
           </>
         )}
       </div>
+
+      <ProductDetailSheet
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
     </section>
   );
 };
