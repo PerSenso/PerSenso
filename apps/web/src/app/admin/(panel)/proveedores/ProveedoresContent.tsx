@@ -6,7 +6,7 @@ import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import type { Supplier, Order, OrderKpis, ProductAdmin } from '@persenso/shared';
 import {
   Plus, Truck, Pencil, ChevronDown, ChevronUp,
-  ShoppingBag, BarChart3, DollarSign, Filter, ChevronRight,
+  ShoppingBag, BarChart3, DollarSign, Filter, ChevronRight, PackageCheck, Clock,
 } from 'lucide-react';
 import { IdBadge } from '@/components/admin/IdBadge';
 import { NotaCell } from '@/components/admin/NotaCell';
@@ -65,8 +65,19 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
   const [endDate, setEndDate] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [receivingId, setReceivingId] = useState<string | null>(null);
 
   const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
+
+  const handleReceive = async (orderId: string) => {
+    setReceivingId(orderId);
+    try {
+      await fetch(`/api/admin/orders/${orderId}/receive`, { method: 'PATCH' });
+      fetchOrders();
+    } finally {
+      setReceivingId(null);
+    }
+  };
 
   const fetchOrders = useCallback(async () => {
     setLoadingOrders(true);
@@ -189,7 +200,7 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: 'var(--ps-surface)', borderBottom: '1px solid var(--ps-border)' }}>
-                  {['Fecha', 'Proveedor', 'Total invertido', ''].map((h) => (
+                  {['Fecha', 'Proveedor', 'Total invertido', 'Estado', ''].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest"
                       style={{ color: 'var(--ps-text-muted)' }}>{h}</th>
                   ))}
@@ -216,22 +227,48 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
                         <td className="px-4 py-3 tabular-nums font-medium" style={{ color: 'var(--ps-gold)' }}>
                           {formatCurrency(total)}
                         </td>
-                        <td className="px-4 py-3 flex items-center gap-2 justify-end">
-                          <button onClick={(e) => { e.stopPropagation(); setEditingOrder(order); }}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center"
-                            style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
-                            title="Editar pedido">
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all"
-                            style={{
-                              background: isExpanded ? 'rgba(201,168,76,0.12)' : 'var(--ps-surface)',
-                              color: isExpanded ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
-                              border: '1px solid var(--ps-border)',
-                            }}>
-                            {isExpanded ? <><ChevronUp className="w-3 h-3" /> Colapsar</> : <><ChevronDown className="w-3 h-3" /> Ver detalle</>}
-                          </button>
+                        <td className="px-4 py-3">
+                          {order.status === 'RECIBIDO' ? (
+                            <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full w-fit"
+                              style={{ background: 'rgba(76,175,125,0.15)', color: 'var(--ps-green)' }}>
+                              <PackageCheck className="w-3 h-3" /> Recibido
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full w-fit"
+                              style={{ background: 'rgba(201,168,76,0.12)', color: 'var(--ps-gold)' }}>
+                              <Clock className="w-3 h-3" /> Pendiente
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 justify-end">
+                            {order.status === 'PENDIENTE' && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleReceive(order.id); }}
+                                disabled={receivingId === order.id}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold disabled:opacity-50"
+                                style={{ background: 'rgba(76,175,125,0.15)', color: 'var(--ps-green)', border: '1px solid var(--ps-green)' }}
+                                title="Marcar como recibido">
+                                <PackageCheck className="w-3.5 h-3.5" />
+                                {receivingId === order.id ? 'Procesando…' : 'Marcar recibido'}
+                              </button>
+                            )}
+                            <button onClick={(e) => { e.stopPropagation(); setEditingOrder(order); }}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center"
+                              style={{ color: 'var(--ps-text-muted)', background: 'var(--ps-surface)' }}
+                              title="Editar pedido">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all"
+                              style={{
+                                background: isExpanded ? 'rgba(201,168,76,0.12)' : 'var(--ps-surface)',
+                                color: isExpanded ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
+                                border: '1px solid var(--ps-border)',
+                              }}>
+                              {isExpanded ? <><ChevronUp className="w-3 h-3" /> Colapsar</> : <><ChevronDown className="w-3 h-3" /> Ver detalle</>}
+                            </button>
+                          </div>
                         </td>
                       </tr>
 

@@ -133,6 +133,7 @@ export interface FundingEntry {
 export interface Order {
   id: string;
   date: string;
+  status: string;
   supplierId?: string;
   supplier?: Supplier;
   shippingCost: number;

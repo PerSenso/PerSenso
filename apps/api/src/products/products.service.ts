@@ -12,7 +12,7 @@ export class ProductsService {
     const products = await this.prisma.product.findMany({
       where: publishedOnly ? { isPublished: true } : undefined,
       include: {
-        restocks: { select: { quantity: true } },
+        restocks: { where: { order: { status: 'RECIBIDO' } }, select: { quantity: true } },
         _count: { select: { sales: { where: { status: 'ACTIVA' } } } },
       },
       orderBy: { createdAt: 'desc' },
@@ -37,6 +37,7 @@ export class ProductsService {
       where: { id },
       include: {
         restocks: {
+          where: { order: { status: 'RECIBIDO' } },
           include: { order: { include: { supplier: true } } },
         },
         _count: { select: { sales: { where: { status: 'ACTIVA' } } } },

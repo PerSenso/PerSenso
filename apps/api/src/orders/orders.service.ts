@@ -167,6 +167,14 @@ export class OrdersService {
     });
   }
 
+  async receiveOrder(id: string) {
+    await this.findOne(id);
+    return this.prisma.order.update({
+      where: { id },
+      data: { status: 'RECIBIDO' },
+    });
+  }
+
   async remove(id: string) {
     await this.findOne(id);
     return this.prisma.order.delete({ where: { id } });

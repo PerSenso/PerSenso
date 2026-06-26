@@ -55,6 +55,11 @@ export class OrdersController {
     return this.ordersService.update(id, dto);
   }
 
+  @Patch(':id/receive')
+  receiveOrder(@Param('id', ParseUUIDPipe) id: string) {
+    return this.ordersService.receiveOrder(id);
+  }
+
   @Roles('OWNER')
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
