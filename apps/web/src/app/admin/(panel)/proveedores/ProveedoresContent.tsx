@@ -11,6 +11,7 @@ import {
 import { IdBadge } from '@/components/admin/IdBadge';
 import { NotaCell } from '@/components/admin/NotaCell';
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { NewProveedorDialog } from './NewProveedorDialog';
 import { EditProveedorDialog } from './EditProveedorDialog';
 import { EditOrderDialog } from './EditOrderDialog';
@@ -73,8 +74,15 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
   const handleReceive = async (orderId: string) => {
     setReceivingId(orderId);
     try {
-      await fetch(`/api/admin/orders/${orderId}/receive`, { method: 'PATCH' });
+      const res = await fetch(`/api/admin/orders/${orderId}/receive`, { method: 'PATCH' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message ?? `Error ${res.status}`);
+      }
+      toast.success('Pedido marcado como recibido — stock actualizado');
       fetchOrders();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al marcar como recibido');
     } finally {
       setReceivingId(null);
     }
@@ -83,8 +91,15 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
   const handleUnreceive = async (orderId: string) => {
     setUnreceivingId(orderId);
     try {
-      await fetch(`/api/admin/orders/${orderId}/unreceive`, { method: 'PATCH' });
+      const res = await fetch(`/api/admin/orders/${orderId}/unreceive`, { method: 'PATCH' });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message ?? `Error ${res.status}`);
+      }
+      toast.success('Pedido revertido a pendiente — stock descontado');
       fetchOrders();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al revertir el pedido');
     } finally {
       setUnreceivingId(null);
     }
