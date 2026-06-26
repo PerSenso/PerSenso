@@ -242,7 +242,7 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2 justify-end">
-                            {order.status === 'PENDIENTE' && (
+                            {order.status !== 'RECIBIDO' && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleReceive(order.id); }}
                                 disabled={receivingId === order.id}
