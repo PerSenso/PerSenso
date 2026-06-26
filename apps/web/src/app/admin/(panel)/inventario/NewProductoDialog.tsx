@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, X } from 'lucide-react';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
+import { AccordEditor } from './AccordEditor';
+import type { AccordItem } from '@persenso/shared';
 
 interface Props {
   onClose: () => void;
@@ -23,6 +25,7 @@ export function NewProductoDialog({ onClose }: Props) {
   const [error, setError] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [accords, setAccords] = useState<AccordItem[]>([]);
   const [form, setForm] = useState({
     name: '',
     brand: '',
@@ -70,6 +73,7 @@ export function NewProductoDialog({ onClose }: Props) {
       if (form.gender) body.gender = form.gender;
       if (form.sizeMl) body.sizeMl = Number(form.sizeMl);
       if (form.notes) body.notes = form.notes;
+      if (accords.length > 0) body.accords = accords;
 
       const createRes = await fetch('/api/admin/products', {
         method: 'POST',
@@ -227,6 +231,13 @@ export function NewProductoDialog({ onClose }: Props) {
           <label className={labelCls} style={labelStyle}>Notas</label>
           <textarea rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)}
             className="w-full px-3 py-2.5 rounded-lg text-sm resize-none" style={fieldStyle} />
+        </div>
+
+        {/* Acordes */}
+        <div className="pt-1 pb-1">
+          <div className="rounded-xl p-4" style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
+            <AccordEditor accords={accords} onChange={setAccords} />
+          </div>
         </div>
 
         {error && <p className="text-xs" style={{ color: 'var(--ps-red)' }}>{error}</p>}

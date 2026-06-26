@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsBoolean,
   IsIn,
+  IsArray,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -60,4 +61,8 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   isPublished?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  accords?: { name: string; intensity: number; color: string }[];
 }

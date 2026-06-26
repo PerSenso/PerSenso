@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { AdminModal } from '@/components/admin/AdminModal';
 import { ImageOff, Trash2 } from 'lucide-react';
-import type { ProductAdmin } from '@persenso/shared';
+import type { AccordItem, ProductAdmin } from '@persenso/shared';
 
 interface Props {
   product: ProductAdmin;
@@ -127,6 +127,31 @@ export function ProductDetailModal({ product, onClose, onEdit }: Props) {
             Notas internas
           </p>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--ps-text-muted)' }}>{product.notes}</p>
+        </div>
+      )}
+
+      {Array.isArray(product.accords) && (product.accords as AccordItem[]).length > 0 && (
+        <div className="mb-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--ps-text-muted)' }}>
+            Acordes olfativos
+          </p>
+          <div className="space-y-1.5">
+            {([...(product.accords as AccordItem[])].sort((a, b) => b.intensity - a.intensity)).map((a) => (
+              <div key={a.name} className="flex items-center gap-2">
+                <div className="flex-1 relative h-7 rounded-lg overflow-hidden" style={{ background: 'var(--ps-surface)' }}>
+                  <div
+                    className="h-full rounded-lg flex items-center px-3"
+                    style={{ width: `${a.intensity}%`, background: a.color, minWidth: 60 }}
+                  >
+                    <span className="text-xs font-medium text-white truncate">{a.name}</span>
+                  </div>
+                </div>
+                <span className="text-xs tabular-nums w-8 text-right flex-shrink-0" style={{ color: 'var(--ps-text-muted)' }}>
+                  {a.intensity}%
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

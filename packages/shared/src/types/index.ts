@@ -2,6 +2,12 @@ export type Role = 'OWNER' | 'ADMIN' | 'VIEWER';
 export type SaleStatus = 'ACTIVA' | 'ANULADA';
 export type Gender = 'HOMBRE' | 'MUJER' | 'UNISEX';
 
+export interface AccordItem {
+  name: string;
+  intensity: number;
+  color: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -98,6 +104,7 @@ export interface Product {
 export interface ProductAdmin extends Product {
   costPrice: number;
   notes?: string;
+  accords?: AccordItem[];
 }
 
 export interface Supplier {

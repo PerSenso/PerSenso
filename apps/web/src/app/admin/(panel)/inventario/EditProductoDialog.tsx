@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
-import type { ProductAdmin, SupplierStockEntry } from '@persenso/shared';
+import { AccordEditor } from './AccordEditor';
+import type { AccordItem, ProductAdmin, SupplierStockEntry } from '@persenso/shared';
 
 interface EditProductoDialogProps {
   product: ProductAdmin;
@@ -21,6 +22,9 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
   const [imageUrl, setImageUrl] = useState<string | null>(product.imageUrl ?? null);
   const [imageUploading, setImageUploading] = useState(false);
   const [suppliers, setSuppliers] = useState<SupplierStockEntry[]>([]);
+  const [accords, setAccords] = useState<AccordItem[]>(
+    Array.isArray(product.accords) ? (product.accords as AccordItem[]) : []
+  );
 
   useEffect(() => {
     fetch(`/api/admin/products/${product.id}/suppliers`)
@@ -65,6 +69,7 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
           minStock: Number(form.minStock),
           notes: form.notes || undefined,
           isPublished: form.isPublished,
+          accords,
         }),
       });
       if (!res.ok) throw new Error();
@@ -219,6 +224,11 @@ export function EditProductoDialog({ product, onClose }: EditProductoDialogProps
               />
             </label>
           </div>
+        </div>
+
+        {/* Acordes olfativos */}
+        <div className="rounded-xl p-4" style={{ background: 'var(--ps-surface)', border: '1px solid var(--ps-border)' }}>
+          <AccordEditor accords={accords} onChange={setAccords} />
         </div>
 
         {/* Lotes por proveedor */}

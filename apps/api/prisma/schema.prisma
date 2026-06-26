@@ -42,6 +42,7 @@ model Product {
   gender        Gender    @default(UNISEX)
   description   String?
   imageUrl      String?
+  accords       Json     @default("[]")
   costPrice     Decimal   @db.Decimal(10, 2)
   salePrice     Decimal   @db.Decimal(10, 2)
   minStock      Int       @default(2)
