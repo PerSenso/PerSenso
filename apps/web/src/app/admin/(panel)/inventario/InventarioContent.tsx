@@ -162,7 +162,7 @@ export function InventarioContent({ products }: InventarioContentProps) {
             ),
           },
           {
-            key: '_margin', header: '% Ganancia', sortable: true, align: 'right',
+            key: '_margin', header: '% Ganancia', align: 'right',
             render: (p) => {
               const cost = Number(p.costPrice);
               const sale = Number(p.salePrice);
