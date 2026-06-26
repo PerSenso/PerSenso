@@ -162,6 +162,21 @@ export function InventarioContent({ products }: InventarioContentProps) {
             ),
           },
           {
+            key: '_margin', header: '% Ganancia', sortable: true, align: 'right',
+            render: (p) => {
+              const cost = Number(p.costPrice);
+              const sale = Number(p.salePrice);
+              if (!cost || !sale) return <span style={{ color: 'var(--ps-text-muted)' }}>—</span>;
+              const pct = ((sale - cost) / cost) * 100;
+              const color = pct >= 50 ? 'var(--ps-green)' : pct >= 20 ? 'var(--ps-gold)' : 'var(--ps-red)';
+              return (
+                <span className="font-medium tabular-nums" style={{ color }}>
+                  {pct.toFixed(1)}%
+                </span>
+              );
+            },
+          },
+          {
             key: 'isPublished', header: 'Visible', align: 'center',
             render: (p) => (
               <span className="text-xs px-2 py-0.5 rounded-full font-medium"
