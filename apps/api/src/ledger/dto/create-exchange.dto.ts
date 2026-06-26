@@ -16,5 +16,9 @@ export class CreateExchangeDto {
 
   @IsOptional()
   @IsString()
+  owner?: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }

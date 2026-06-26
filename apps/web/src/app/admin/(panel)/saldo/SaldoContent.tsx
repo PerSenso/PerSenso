@@ -64,7 +64,7 @@ export function SaldoContent({ ledger, contributions }: SaldoContentProps) {
       <AdminPageHeader title="Saldo / Caja" subtitle="Control de ingresos y egresos" />
 
       {editing && <EditMovementDialog movement={editing} socios={socios} onClose={() => setEditing(null)} />}
-      {showCambio && <CambioDialog onClose={() => setShowCambio(false)} onSuccess={() => router.refresh()} />}
+      {showCambio && <CambioDialog socios={socios} onClose={() => setShowCambio(false)} onSuccess={() => router.refresh()} />}
 
       {deleting && (
         <AdminModal title="Eliminar Movimiento" onClose={() => setDeleting(null)}>

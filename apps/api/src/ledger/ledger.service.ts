@@ -111,6 +111,7 @@ export class LedgerService {
     const label = `Cambio: ${dto.fromMethod.toUpperCase()} → ${dto.toMethod.toUpperCase()}`;
     const notes = dto.notes ?? label;
     const date = new Date(dto.date);
+    const owner = dto.owner ?? null;
     const [retiro, ingreso] = await this.prisma.$transaction([
       this.prisma.cashMovement.create({
         data: {
@@ -120,6 +121,7 @@ export class LedgerService {
           amount: dto.amount,
           date,
           notes,
+          owner,
         },
       }),
       this.prisma.cashMovement.create({
@@ -130,6 +132,7 @@ export class LedgerService {
           amount: dto.amount,
           date,
           notes,
+          owner,
         },
       }),
     ]);

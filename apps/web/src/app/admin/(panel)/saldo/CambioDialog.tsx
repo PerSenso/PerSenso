@@ -16,17 +16,19 @@ const METHODS = [
 ];
 
 interface CambioDialogProps {
+  socios: string[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function CambioDialog({ onClose, onSuccess }: CambioDialogProps) {
+export function CambioDialog({ socios, onClose, onSuccess }: CambioDialogProps) {
   const today = new Date().toISOString().split('T')[0];
   const [form, setForm] = useState({
     amount: '',
     fromMethod: 'usdt',
     toMethod: 'efectivo',
     date: today,
+    owner: '',
     notes: '',
   });
   const [loading, setLoading] = useState(false);
@@ -52,6 +54,7 @@ export function CambioDialog({ onClose, onSuccess }: CambioDialogProps) {
           fromMethod: form.fromMethod,
           toMethod: form.toMethod,
           date: new Date(form.date).toISOString(),
+          owner: form.owner || undefined,
           notes: form.notes || undefined,
         }),
       });
@@ -144,6 +147,16 @@ export function CambioDialog({ onClose, onSuccess }: CambioDialogProps) {
             className={inputCls}
             style={inputStyle}
           />
+        </div>
+
+        {/* Quién */}
+        <div>
+          <label className={labelCls} style={{ color: 'var(--ps-text-muted)' }}>¿Quién hace el cambio?</label>
+          <select value={form.owner} onChange={(e) => set('owner', e.target.value)}
+            className={inputCls} style={inputStyle}>
+            <option value="">— Sin asignar —</option>
+            {socios.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
 
         {/* Notas */}
