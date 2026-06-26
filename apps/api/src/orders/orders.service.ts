@@ -27,7 +27,7 @@ export class OrdersService {
         restocks: { include: { product: true } },
         fundingEntries: true,
       },
-      orderBy: { date: 'desc' },
+      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
