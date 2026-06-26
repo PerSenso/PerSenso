@@ -23,7 +23,7 @@ export class LedgerService {
           (SELECT COALESCE(SUM(quantity * "baseUnitCost"), 0) FROM "Restock") +
           (SELECT COALESCE(SUM("shippingCost" + "marketingCost"), 0) FROM "Order") AS total
       `,
-      this.prisma.cashMovement.findMany({ orderBy: { date: 'asc' } }),
+      this.prisma.cashMovement.findMany({ orderBy: { date: 'desc' } }),
     ]);
 
     const paymentsByMethod = paymentRows.map((p) => ({
