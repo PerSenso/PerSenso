@@ -83,7 +83,7 @@ export function AccordEditor({ accords, onChange }: AccordEditorProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), add())}
-            placeholder="ej. aromático, floral…"
+            placeholder="Escribe cualquier acorde o elige uno…"
             className="w-full px-3 py-2 rounded-lg text-sm outline-none"
             style={fieldStyle}
           />
