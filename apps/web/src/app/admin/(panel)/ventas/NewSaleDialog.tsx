@@ -157,7 +157,7 @@ const METHODS = [
   { value: 'pago_movil', label: 'Pago Móvil' },
   { value: 'transferencia', label: 'Transferencia' },
   { value: 'zelle', label: 'Zelle' },
-  { value: 'binance', label: 'Binance' },
+  { value: 'usdt', label: 'USDT' },
 ];
 
 export function NewSaleDialog({ clients, products, onClose }: NewSaleDialogProps) {

@@ -42,7 +42,7 @@ const METHODS = [
   { value: 'pago_movil', label: 'Pago Móvil' },
   { value: 'transferencia', label: 'Transferencia' },
   { value: 'zelle', label: 'Zelle' },
-  { value: 'binance', label: 'Binance' },
+  { value: 'usdt', label: 'USDT' },
 ];
 
 function fmtMethod(m: string) {

@@ -11,8 +11,6 @@ const METHODS = [
   { value: 'pago_movil',    label: 'Pago Móvil' },
   { value: 'transferencia', label: 'Transferencia' },
   { value: 'usdt',          label: 'USDT' },
-  { value: 'dolares',       label: 'Dólares' },
-  { value: 'binance',       label: 'Binance' },
 ];
 
 interface CambioDialogProps {

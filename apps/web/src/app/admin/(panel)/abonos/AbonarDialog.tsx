@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
 import type { SaleWithDebt } from '@persenso/shared';
 
-const PAYMENT_METHODS = ['Efectivo', 'Transferencia', 'Pago Móvil', 'Zelle', 'Dólares', 'Otro'];
+const PAYMENT_METHODS = ['Efectivo', 'Transferencia', 'Pago Móvil', 'Zelle', 'USDT', 'Otro'];
 
 interface AbonarDialogProps {
   sale: SaleWithDebt;
