@@ -27,7 +27,7 @@ interface FundingEntry {
   amount: string;
 }
 
-const PAYMENT_METHODS = ['Efectivo', 'Transferencia', 'Zelle', 'Pago Móvil', 'Otro'];
+const PAYMENT_METHODS = ['Efectivo', 'Zelle', 'Pago Móvil', 'USDT', 'Otro'];
 const SOCIOS = ['Angel', 'Mario', 'Simon', 'PerSenso'];
 
 function ProductCombobox({
