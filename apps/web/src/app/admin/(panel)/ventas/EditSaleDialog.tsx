@@ -98,7 +98,7 @@ interface EditSaleDialogProps {
 function fmtMethod(m: string) {
   const map: Record<string, string> = {
     efectivo: 'Efectivo', pago_movil: 'Pago Móvil',
-    transferencia: 'Transferencia', zelle: 'Zelle', usdt: 'USDT',
+    zelle: 'Zelle', usdt: 'USDT',
   };
   return map[m] ?? m;
 }

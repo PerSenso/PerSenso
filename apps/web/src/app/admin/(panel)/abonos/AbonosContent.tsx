@@ -40,7 +40,6 @@ function PendingBar({ paid, total }: { paid: number; total: number }) {
 const METHODS = [
   { value: 'efectivo', label: 'Efectivo' },
   { value: 'pago_movil', label: 'Pago Móvil' },
-  { value: 'transferencia', label: 'Transferencia' },
   { value: 'zelle', label: 'Zelle' },
   { value: 'usdt', label: 'USDT' },
 ];

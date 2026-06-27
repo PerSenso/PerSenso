@@ -6,11 +6,10 @@ import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 const METHODS = [
-  { value: 'efectivo',      label: 'Efectivo' },
-  { value: 'zelle',         label: 'Zelle' },
-  { value: 'pago_movil',    label: 'Pago Móvil' },
-  { value: 'transferencia', label: 'Transferencia' },
-  { value: 'usdt',          label: 'USDT' },
+  { value: 'efectivo',   label: 'Efectivo' },
+  { value: 'zelle',      label: 'Zelle' },
+  { value: 'pago_movil', label: 'Pago Móvil' },
+  { value: 'usdt',       label: 'USDT' },
 ];
 
 interface CambioDialogProps {

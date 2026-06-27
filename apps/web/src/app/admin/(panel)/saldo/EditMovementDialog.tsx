@@ -11,7 +11,7 @@ interface Props {
   onClose: () => void;
 }
 
-const METHODS = ['efectivo', 'pago_movil', 'transferencia', 'zelle', 'usdt'];
+const METHODS = ['efectivo', 'pago_movil', 'zelle', 'usdt'];
 
 export function EditMovementDialog({ movement, socios, onClose }: Props) {
   const router = useRouter();
