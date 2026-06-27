@@ -302,7 +302,7 @@ export function ProveedoresContent({ suppliers, products }: ProveedoresContentPr
                                 color: isExpanded ? 'var(--ps-gold)' : 'var(--ps-text-muted)',
                                 border: '1px solid var(--ps-border)',
                               }}>
-                              {isExpanded ? <><ChevronUp className="w-3 h-3" /> Colapsar</> : <><ChevronDown className="w-3 h-3" /> Ver detalle</>}
+                              {isExpanded ? <><ChevronUp className="w-3 h-3" /> Ocultar</> : <><ChevronDown className="w-3 h-3" /> Ver detalle</>}
                             </button>
                           </div>
                         </td>
