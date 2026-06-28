@@ -35,6 +35,21 @@ export class LedgerService {
       count: Number(p.count),
     }));
 
+    // Apply CashMovement adjustments per method (ingresos + retiros, including exchanges)
+    const methodMap: Record<string, { total: number; count: number }> = {};
+    for (const pm of paymentsByMethod) {
+      methodMap[pm.method] = { total: pm.total, count: pm.count };
+    }
+    for (const m of movements) {
+      if (!methodMap[m.method]) methodMap[m.method] = { total: 0, count: 0 };
+      if (m.type === 'ingreso') methodMap[m.method].total += Number(m.amount);
+      else methodMap[m.method].total -= Number(m.amount);
+    }
+    const combinedByMethod = Object.entries(methodMap)
+      .map(([method, data]) => ({ method, total: data.total, count: data.count }))
+      .filter((m) => m.total !== 0)
+      .sort((a, b) => b.total - a.total);
+
     const paymentsIn = paymentsByMethod.reduce((acc, p) => acc + p.total, 0);
     const manualIn = movements
       .filter((m) => m.type === 'ingreso')
@@ -50,7 +65,7 @@ export class LedgerService {
       totalIn,
       totalOut,
       balance: totalIn - totalOut,
-      paymentsByMethod,
+      paymentsByMethod: combinedByMethod,
       movements,
     };
   }
