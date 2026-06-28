@@ -27,7 +27,13 @@ interface FundingEntry {
   amount: string;
 }
 
-const PAYMENT_METHODS = ['Efectivo', 'Zelle', 'Pago Móvil', 'USDT', 'Otro'];
+const PAYMENT_METHODS = [
+  { value: 'efectivo',   label: 'Efectivo' },
+  { value: 'zelle',      label: 'Zelle' },
+  { value: 'pago_movil', label: 'Pago Móvil' },
+  { value: 'usdt',       label: 'USDT' },
+  { value: 'otro',       label: 'Otro' },
+];
 const SOCIOS = ['Angel', 'Mario', 'Simon', 'PerSenso'];
 
 function ProductCombobox({
@@ -184,7 +190,7 @@ export function NewOrderDialog({ suppliers, products, onClose }: Props) {
     { productId: '', quantity: '', baseUnitCost: '', search: '', open: false },
   ]);
   const [fundingEntries, setFundingEntries] = useState<FundingEntry[]>([
-    { investor: '', method: 'Efectivo', amount: '' },
+    { investor: '', method: 'efectivo', amount: '' },
   ]);
 
   const setField = (field: keyof typeof form) =>
@@ -204,7 +210,7 @@ export function NewOrderDialog({ suppliers, products, onClose }: Props) {
     setFundingEntries((prev) => prev.map((f, i) => i === idx ? { ...f, [field]: value } : f));
 
   const addFunding = () =>
-    setFundingEntries((prev) => [...prev, { investor: '', method: 'Efectivo', amount: '' }]);
+    setFundingEntries((prev) => [...prev, { investor: '', method: 'efectivo', amount: '' }]);
 
   const removeFunding = (idx: number) =>
     setFundingEntries((prev) => prev.filter((_, i) => i !== idx));
@@ -413,7 +419,7 @@ export function NewOrderDialog({ suppliers, products, onClose }: Props) {
                   {idx === 0 && <p className="text-[10px] mb-1" style={{ color: 'var(--ps-text-muted)' }}>Método</p>}
                   <select value={f.method} onChange={(e) => setFunding(idx, 'method', e.target.value)}
                     className={fieldCls} style={fieldStyle}>
-                    {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+                    {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
                 </div>
                 <div>

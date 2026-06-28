@@ -11,7 +11,12 @@ interface Props {
   onClose: () => void;
 }
 
-const METHODS = ['efectivo', 'pago_movil', 'zelle', 'usdt'];
+const METHODS = [
+  { value: 'efectivo',   label: 'Efectivo' },
+  { value: 'pago_movil', label: 'Pago Móvil' },
+  { value: 'zelle',      label: 'Zelle' },
+  { value: 'usdt',       label: 'USDT' },
+];
 
 export function EditMovementDialog({ movement, socios, onClose }: Props) {
   const router = useRouter();
@@ -97,7 +102,7 @@ export function EditMovementDialog({ movement, socios, onClose }: Props) {
           <label className={labelCls} style={labelStyle}>Método de pago *</label>
           <select value={form.method} onChange={(e) => set('method', e.target.value)}
             className={fieldCls} style={fieldStyle}>
-            {METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+            {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
         </div>
 
