@@ -5,7 +5,13 @@ import { toast } from 'sonner';
 import { AdminModal, fieldCls, fieldStyle, labelCls, labelStyle } from '@/components/admin/AdminModal';
 import type { SaleWithDebt } from '@persenso/shared';
 
-const PAYMENT_METHODS = ['Efectivo', 'Pago Móvil', 'Zelle', 'USDT', 'Otro'];
+const PAYMENT_METHODS = [
+  { value: 'efectivo',   label: 'Efectivo' },
+  { value: 'pago_movil', label: 'Pago Móvil' },
+  { value: 'zelle',      label: 'Zelle' },
+  { value: 'usdt',       label: 'USDT' },
+  { value: 'otro',       label: 'Otro' },
+];
 
 interface AbonarDialogProps {
   sale: SaleWithDebt;
@@ -17,7 +23,7 @@ export function AbonarDialog({ sale, onClose, onSuccess }: AbonarDialogProps) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     amount: '',
-    paymentMethod: 'Efectivo',
+    paymentMethod: 'efectivo',
     notes: '',
   });
 
@@ -100,7 +106,7 @@ export function AbonarDialog({ sale, onClose, onSuccess }: AbonarDialogProps) {
             style={fieldStyle}
           >
             {PAYMENT_METHODS.map((m) => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
         </div>

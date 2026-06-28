@@ -8,6 +8,13 @@ import { AdminDataTable } from '@/components/admin/AdminDataTable';
 import { AdminModal } from '@/components/admin/AdminModal';
 import type { LedgerSummary, FundingContribution, CashMovement } from '@persenso/shared';
 import { Wallet, TrendingUp, TrendingDown, CreditCard, Pencil, Trash2, ArrowLeftRight } from 'lucide-react';
+
+const METHOD_LABELS: Record<string, string> = {
+  efectivo: 'Efectivo', pago_movil: 'Pago Móvil',
+  zelle: 'Zelle', usdt: 'USDT', otro: 'Otro',
+  transferencia: 'Transferencia',
+};
+const fmtMethod = (m: string) => METHOD_LABELS[m] ?? m;
 import { NotaCell } from '@/components/admin/NotaCell';
 import { EditMovementDialog } from './EditMovementDialog';
 import { CambioDialog } from './CambioDialog';
@@ -117,7 +124,7 @@ export function SaldoContent({ ledger, contributions }: SaldoContentProps) {
                 <div className="flex items-center gap-2 mb-1">
                   <CreditCard className="w-3 h-3" style={{ color: 'var(--ps-gold)' }} />
                   <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--ps-text-muted)' }}>
-                    {pm.method}
+                    {fmtMethod(pm.method)}
                   </span>
                 </div>
                 <p className="text-lg font-semibold tabular-nums" style={{ color: 'var(--ps-text)' }}>

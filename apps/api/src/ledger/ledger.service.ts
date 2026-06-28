@@ -5,6 +5,14 @@ import { CreateMovementDto } from './dto/create-movement.dto';
 import { UpdateMovementDto } from './dto/update-movement.dto';
 import { CreateExchangeDto } from './dto/create-exchange.dto';
 
+function normalizeMethod(m: string): string {
+  const s = m.toLowerCase().trim();
+  if (s === 'pago móvil' || s === 'pago movil') return 'pago_movil';
+  if (s === 'dólares' || s === 'dolares') return 'efectivo';
+  if (s === 'binance') return 'usdt';
+  return s;
+}
+
 @Injectable()
 export class LedgerService {
   constructor(private prisma: PrismaService) {}
@@ -38,12 +46,16 @@ export class LedgerService {
     // Apply CashMovement adjustments per method (ingresos + retiros, including exchanges)
     const methodMap: Record<string, { total: number; count: number }> = {};
     for (const pm of paymentsByMethod) {
-      methodMap[pm.method] = { total: pm.total, count: pm.count };
+      const key = normalizeMethod(pm.method);
+      if (!methodMap[key]) methodMap[key] = { total: 0, count: 0 };
+      methodMap[key].total += pm.total;
+      methodMap[key].count += pm.count;
     }
     for (const m of movements) {
-      if (!methodMap[m.method]) methodMap[m.method] = { total: 0, count: 0 };
-      if (m.type === 'ingreso') methodMap[m.method].total += Number(m.amount);
-      else methodMap[m.method].total -= Number(m.amount);
+      const key = normalizeMethod(m.method);
+      if (!methodMap[key]) methodMap[key] = { total: 0, count: 0 };
+      if (m.type === 'ingreso') methodMap[key].total += Number(m.amount);
+      else methodMap[key].total -= Number(m.amount);
     }
     const combinedByMethod = Object.entries(methodMap)
       .map(([method, data]) => ({ method, total: data.total, count: data.count }))
