@@ -86,7 +86,18 @@ function ProductCombobox({
         style={fieldStyle}
       >
         <span className="truncate text-sm" style={{ color: selected ? 'var(--ps-text)' : 'var(--ps-text-muted)' }}>
-          {selected ? `${selected.name}${selected.brand ? ` · ${selected.brand}` : ''}` : '— Seleccionar —'}
+          {selected ? (
+            <>
+              {selected.name}
+              {selected.brand && <span style={{ color: 'var(--ps-text-muted)' }}> · {selected.brand}</span>}
+              {(selected.concentration || selected.sizeMl) && (
+                <span style={{ color: 'var(--ps-text-muted)' }}>
+                  {selected.concentration ? ` · ${selected.concentration}` : ''}
+                  {selected.sizeMl ? ` · ${selected.sizeMl}ml` : ''}
+                </span>
+              )}
+            </>
+          ) : '— Seleccionar —'}
         </span>
         <div className="flex items-center gap-1 flex-shrink-0">
           {selected && (
@@ -145,8 +156,10 @@ function ProductCombobox({
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = p.id === value ? 'rgba(201,168,76,0.08)' : 'transparent'; }}
                 >
-                  <span className="font-medium">{p.name}</span>
-                  {p.brand && <span className="ml-1 text-xs" style={{ color: 'var(--ps-text-muted)' }}>· {p.brand}</span>}
+                  <div className="font-medium">{p.name}</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--ps-text-muted)' }}>
+                    {[p.brand, p.concentration, p.sizeMl ? `${p.sizeMl}ml` : null].filter(Boolean).join(' · ')}
+                  </div>
                 </button>
               ))
             )}
